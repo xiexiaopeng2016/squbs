@@ -18,6 +18,6 @@ squbs设置上面图片中显示的actor和组件层次结构, 以支持一个�
 * **Request handler actors** - 与其在服务中使用`RouteDefinition`/`FlowDefinition`, 开发人员不如选择在低级别API上工作并为此注册一个请求处理actor。避开高级路由API 通常会占用较少的内存, 并允许处理流式请求, 但与路由DSL相比更难进行编码。
 
 * **CubeSupervisors** - `CubeSupervisors`直接由actor系统创建并使用`Unicomplex`注册自己。每个cube创建一个CubeSupervisor实例。它们充当服务处理器的监管者，并注册(well-known) actor (可以通过名称查找)，并处理错误，和重启这些actor。它负责子actor的生命周期。Well-known actor需要初始化，将在`squbs-meta.conf`文件中定义此类需求。它们可以与父辈通信 - CubeSupervisor管理它们的初始化状态。CubeSupervisor将再次传达生命周期状态和初始化变更给`Unicomplex`, 其维护整个系统的生命周期状态。请参考[Bootstraping](bootstrap.md)了解在`squbs-meta.conf`中cube和服务配置项的信息。也可以参考[运行时生命周期&API](lifecycle.md)了解生命周期状态和生命周期状态变更的信息。 此外, cube结构还为well-known actor提供了命名空间, 以防止由不同cube提供的well-known actor之间的命名冲突。
-`RouteActor`和`FlowActor`在技术上等同于wellk-nown actor
+`RouteActor`和`FlowActor`在技术上等同于wellk-nown actor。
 
 * **Well-known actors** - 这些actor都是注册过的actor，其由CubeSupervisor启动。它们通过`squbs-meta`.conf注册和提供基本的启动信息，比如路由。请参考[Bootstrapping](bootstrap.md)中关于cube配置的详细信息。你可以通过cube的`reference.conf`添加额外的配置。请参考[Typesafe配置](https://github.com/typesafehub/config)库文档中关于`reference.conf`和`application.conf`的详细信息。

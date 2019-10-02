@@ -1,32 +1,28 @@
-# Runtime Lifecycle & API
+# 运行时生命周期 & API
 
-Lifecycle is really a concern of the infrastructure. Applications rarely have to touch on or even be aware of the system's lifecycle. System components, admin consoles, or even application components or actors that take a long time to initialize, and need to be fully initialized before the system can be made available for traffic will need to be aware of the system lifecycle. The latter includes functions such as cache controllers, cache loaders, device initializers, etc.
+生命周期确实是基础结构的一个关注。应用程序很少需要接触, 甚至不知道系统的生命周期。系统组件、管理控制台、或者应用程序组件或actor, 其需要长时间进行初始化，并且需要在系统可用于通信之前完全初始化, 这就必须知道系统生命周期。后者包括的功能有缓存控制器、缓存加载器、设备初始化器，等等。
 
-The squbs runtime exposes the following lifecycle states:
+squbs运行时暴露了以下生命周期状态：
 
-* **Starting** - the initial state when squbs comes up.
+* **Starting** - squbs启动时的初始化状态。
 
-* **Initializing** - Unicomplex started. Services starting. Cubes starting. Waiting for init reports.
+* **Initializing** - Unicomplex已启动。服务启动中。Cubes启动中。等待初始化报告。
 
-* **Active** - Ready to do work and take service calls.
+* **Active** - 准备就绪，可以开始工作和接受服务调用。
 
-* **Failed** - Cubes did not start properly.
+* **Failed** - Cubes没有正确启动。
 
-* **Stopping** - GracefulStop message received at Unicomplex. Terminating cubes, actors, and unbinding services.
+* **Stopping** - 在Unicomplex收到GracefulStop消息。终止cube，actor并解绑服务。
 
-* **Stopped** - squbs runtime stopped. Unicomplex terminated. ActorSystem terminated.
+* **Stopped** - squbs运行时停止。Unicomplex已终止。ActorSystem已终止。
 
-## Lifecycle Hooks
+## 生命周期钩子
 
-Most actors don't care when they are started or shut down. However, there may be a category of actors that require
-execution certain initializations before they get to the state of accepting general traffic. Similarly, certain actors
-also care about being notified before shutting down allowing them to properly clean up before sending them a poison
-pill. Lifecycle hooks are here for this very reason.
+多数actor不关心它们什么时候启动或者关闭。然而，可能有一类actor需要执行某些初始化, 然后才能到达接受常规通信的状态。同样地, 某些actor也关心在关闭之前被通知, 使它们可以正确地清理。生命周期钩子就是为此而存在的。 
 
-You can make your actor register lifecycle events by sending `ObtainLifecycleEvents(states: LifecycleState*)` to `Unicomplex()`.
-Then once the system state changed, your actor will receive the lifecycle state.
+可以让你的actor注册生命周期事件，通过发送 `ObtainLifecycleEvents(states: LifecycleState*)`给`Unicomplex()`。然后，一旦系统状态改变，你的actor将收到生命周期状态。
 
-You can also obtain the current state by sending `SystemState` to `Unicomplex()`. You'll get the response as one of the states above. All system state objects extend `org.squbs.unicomplex.LifecycleState` and are all part of the `org.squbs.unicomplex` package listed as followings:
+你也可以通过发送`SystemState`消息给`Unicomplex()`获得当前状态。你将得到上面状态的一种的响应。所有的系统状态继承于`org.squbs.unicomplex.LifecycleState`，并且都是`org.squbs.unicomplex`包的一部分，如下所示：
 
 * `case object Starting extends LifecycleState`
 * `case object Initializing extends LifecycleState`
@@ -36,10 +32,9 @@ You can also obtain the current state by sending `SystemState` to `Unicomplex()`
 * `case object Stopped extends LifecycleState`
  
 
-## Startup Hooks
+## 启动(Startup)钩子
 
-An actor wishing to participate in initialization must indicate so in the squbs metadata `META-INF/squbs-meta.conf` as
-follows:
+一个希望参与初始化的actor必须在squbs元数据`META-INF/squbs-meta.conf`中注明如下:
 
 ```
 cube-name = org.squbs.bottlecube
@@ -53,18 +48,15 @@ squbs-actors = [
   }
 ```
 
-Any actor with `init-required` set to `true` needs to send a `Initialized(report)` message to the cube supervisor which is the parent
-actor of these well known actors. The squbs runtime is moved to the *Active* state once all cubes are successfully initialized. This also means each actor with `init-required` set to `true` submitted an
-Initialized(report) with success. If any one cube reports an initialization error via the `Initialized(report)`, the
-squbs runtime will end up in *Failed* state instead.
+`init-required`设置为`true`的任何actor需要发送一个`Initialized(report)`消息给cube监管者, 它们是这些well-known actor的父actor）。一旦所有的cube初始化成功，squbs运行时将变更到*Active*状态。这也意味着每个`init-required`设为`true`的actor提交了带`success`的`Initialized(report)`消息。如果任何一个cube通过`Initialized(report)`报告了初始化错误，squbs运行时将以*Failed*状态终结。
 
 ##### Scala
 
-Actors participating in initialization send an `Initialized(report)` message. The report being of type `Try[Option[String]]` allows the actor to report both initialization success and failure with the proper exception.
+actor参与初始化发送一个`Initialized(report)`消息。`report`将是`Try[Option[String]]`类型，允许actor报告初始化成功和特有异常的失败。
 
 ##### Java
 
-The Java API to create an `Initialized(report)` is as follows:
+创建一个`Initialized(report)`的Java API如下所示:
 
 ```java
 // Creates a successful InitReport without a description.
@@ -77,12 +69,11 @@ Initialized.success(String desc);
 Initialized.failed(Throwable e);
 ```
 
-## Shutdown Hooks
+## 关闭(Shutdown)钩子
 
-### Stop Actors
+### 停止Actor
 
-The Scala trait `org.squbs.lifecycle.GracefulStopHelper` and Java abstract class `org.squbs.lifecycle.ActorWithGracefulStopHelper` lets users achieve graceful stop in their own actors' code.
-You use these traits or abstract classes in the following way:
+Scala特质`org.squbs.lifecycle.GracefulStopHelper`和Java抽象类`org.squbs.lifecycle.ActorWithGracefulStopHelper`让用户在他们actor的代码中获得优雅停止。你可以使用这些特质或抽象类，用下面的方法。
 
 ##### Scala
 
@@ -100,11 +91,11 @@ public class MyActor exteds ActorWithGracefulStopHelper {
 }
 ```
 
-The trait/abstract class provides some helper methods to support graceful stop of an actor in the squbs framework.
+这些特质/抽象类提供了一下辅助方法来支持squbs框架中的actor的优雅停止。
 
-#### Stop Timeout
+#### 停止超时
 
-To prevent the shutdown process from getting stuck, a stop timeout is controlling the maximum time the shutdown process can take before forcefully stopping the actors. The `stopTimeout` property can be overridden as follows:
+为了防止关闭过程被卡住，停止超时是指在强制停止actor之前，控制关闭过程所花费的最大时间。`stopTimeout`属性可以按如下方式重写:
 
 ##### Scala
 
@@ -128,17 +119,13 @@ public long getStopTimeout() {
 }
 ```
 
-You can override the method to indicate how long approximately this actor needs to perform a graceful stop.
-Once the actor is started, it will send the `stopTimeout` to its parent actor in `StopTimeout(stopTimeout)` message.
-You can have the behavior in the parent actor to handle this message if you care about it.
+你可以重写该方法, 以指示此actor执行优雅停止大概需要多长时间。一旦actor启动, 它将用`StopTimeout(stopTimeout)`消息发送`stopTimeout`给父actor。如果您关心此消息, 则可以在父actor有一个行为，用来处理此消息。
 
-If you mixed this trait in your actors' Scala code, you should have a behavior in the `receive` method to handle the `GracefulStop`
-message, because only in this case you can hook your code to perform a graceful stop
-(You cannot add custom behavior towards `PoisonPill`). Supervisors will only propagate the `GracefulStop` message to children that mixed in the `GracefulStopHelper` trait. The implementation of the children is expected to handle this message in their `receive` block.
+如果你在actor的Scala代码中混入了这个特质，你应当在`receive`方法中有一个行为处理`GracefulStop`消息，因为只有这种情况下你可以hook你的代码以执行一个优雅的停止(你不能添加趋向`PoisonPill`自定义行为)。监管者只传播`GracefulStop`消息给混入了`GracefulStopHelper`特质的子actor。子actor的实现应当在它们的`receive`代码块中处理这个消息。
 
-Similarly, Java classes extending `ActorWithGracefulStopHelper` expect your handling of the `GracefulStop` in your actor's `createReceive()` method.
+同样的，Java类扩展`ActorWithGracefulStopHelper`期望在actor的`createReceive()`方法中处理`GracefulStop`。
 
-squbs also provides the following 2 default strategies in the trait/abstract class.
+squbs还在特质/抽象类中提供了以下2个默认策略。
 
 ##### Scala
 
@@ -193,6 +180,6 @@ protected final void defaultLeafActorStop();
 protected final void defaultMidActorStop(List[ActorRef] dependencies, long timeout, TimeUnit unit);
 ```
 
-### Stopping squbs Extensions
+### 停止squbs的扩展
 
-You can add custom behavior at extension shutdown by overriding the `shutdown()` method in `org.squbs.lifecycle.ExtensionLifecycle`. Note that this method in all installed extensions will be executed after termination of the actor system. If any extension throws exceptions during shutdown, JVM will exit with -1.
+你可以在扩展关闭里增加自定义行为，通过覆盖`org.squbs.lifecycle.ExtensionLifecycle`中的`shutdown()` 方法。请注意，所有已安装的扩展中的此方法都将在actor系统终止后执行。如果任何扩展在关闭期间抛出异常，JVM将以-1退出。
