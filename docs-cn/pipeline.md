@@ -1,23 +1,23 @@
-# Request/Response Pipeline
+# 请求/响应管道
 
-### Overview
+### 概述
 
-We often need to have common infrastructure functionality or organizational standards across different services/clients.  Such infrastructure includes, but is not limited, to logging, metrics collection, request tracing, authentication/authorization, tracking, cookie management, A/B testing, etc.
+我们经常需要在不同的服务/客户端之间有公共的基础设施功能或组织标准。这样的基础设施包括但不限于，日志、指标收集、请求追踪、认证/授权、追踪、cookie管理、A/B测试等。
 
-As squbs promotes separation of concerns, such logic would belong to infrastructure and not service/client implementation.  The squbs pipeline allows infrastructure to provide components installed into a service/client without service/client owner having to worry about such aspects.
+随着squbs促进关注点分离，此类逻辑属于基础设施，而不是客户端实现。squbs管道允许基础设施提供组件安装到服务/客户端，而无需服务/客户自己操心。
 
-Generally speaking, a squbs pipeline is a Bidi Flow acting as a bridge in between: 
+一般而言，一个squbs管道是一个Bidi Flow，扮演如下之间的桥梁：
 
-  * the Akka HTTP layer and the squbs service:
-    * All request messages sent from Akka Http to squbs service will go thru the pipeline
-    * Vice versa, all response messages sent from squbs service will go thru the pipeline.
-  * squbs client and Akka HTTP host connection pool flow:
-    * 	All request messages sent from squbs client to Akka HTTP host connection pool will go thru the pipeline
-    * Vice versa, all response messages sent from Akka HTTP host connection pool to squbs client will go thru the pipeline. 
+  * Akka HTTP层和squbs服务:
+    * 从Akka HTTP发送到squbs服务的所有请求消息都将通过管道
+    * 反之亦然，从squbs服务发送的所有响应消息将通过管道
+  * squbs客户端和Akka HTTP主机连接池flow：
+    * 从squbs客户端发送到Akka HTTP连接池的所有请求消息将通过管道
+    * 反之亦然，从Akka HTTP连接池到squbs客户端所有响应消息将通过管道
 
-### Pipeline declaration
+### 管道声明
 
-Default pre/post flows specified via the below configuration are automatically connected to the server/client side pipeline unless `defaultPipeline` in individual service/client configuration is set to `off`:
+通过以下配置指定的默认pre/post流将自动连接到服务器/客户端管道，除非个别服务/客户端配置中`defaultPipeline`设置为`off`：
 
 ```
 squbs.pipeline.server.default {
@@ -31,9 +31,9 @@ squbs.pipeline.client.default {
 }
 ```
 
-#### Pipeline declaration for services
+#### 为服务声明管道
 
-In `squbs-meta.conf`, you can specify a pipeline for a service:
+在`squbs-meta.conf`中，你可以为服务指定一个管道：
 
 ```
 squbs-services = [
@@ -45,10 +45,9 @@ squbs-services = [
 ]
 ```
 
-If there is no custom pipeline for a squbs-service, just omit.
+如果没有用于`squbs-service`的自定义管道，则只需省略。
 
-
-With the above configuration, the pipeline would look like:
+使用上述配置，管道将如下所示：
 
 ```
                  +---------+   +---------+   +---------+   +---------+
@@ -59,11 +58,11 @@ RequestContext <~|         |<~ |         |<~ |         |<~ |         |
                  +---------+   +---------+   +---------+   +---------+
 ```
 
-`RequestContext` is basically a wrapper around `HttpRequest` and `HttpResponse`, which also allows carrying context information.
+`RequestContext`基本上是围绕`HttpRequest`和`HttpResponse`的包装，这也允许携带上下文信息。
 
-#### Pipeline declaration for clients
+#### 为客户端声明管道
 
-In `application.conf`, you can specify a pipeline for a client:
+在`application.conf`中，你可以为客户端指定一个管道：
 
 ```
 sample {
@@ -72,9 +71,9 @@ sample {
 }
 ```
 
-If there is no custom pipeline for a squbs-client, just omit.
+如果没有用于`squbs-client`的自定义管道，则只需省略。
 
-With the above configuration, the pipeline would look like:
+使用上述配置，管道将如下所示：
 
 
 ```
@@ -87,9 +86,9 @@ RequestContext <~|         |<~ |         |<~ |         |<~ |   Flow   |
 ```
 
 
-### Bidi Flow Configuration
+### Bidi Flow配置
 
-A bidi flow can be specified as below:
+一个 bidi flow可以如下方式指定：
 
 ```
 dummyflow {
@@ -98,10 +97,10 @@ dummyflow {
 }
 ```
 
-* type: to idenfity the configuration as a `squbs.pipelineflow`.
-* factory: the factory class to create the `BidiFlow` from.
+* type: 将配置标识为一个`squbs.pipelineflow`。
+* factory: 创建`BidiFlow`的工厂类。
 
-A sample `DummyBidiFlow` looks like below:
+一个简单的`DummyBidiFlow`示例如下所示：
 
 ##### Scala
 
@@ -139,13 +138,14 @@ public class DummyBidiFlow extends AbstractPipelineFlowFactory {
 }
 ```
 
-#### Aborting the flow
-In certain scenarios, a stage in pipeline may have a need to abort the flow and return an `HttpResponse`, e.g., in case of authentication/authorization.  In such scenarios, the rest of the pipeline should be skipped and the request should not reach to the squbs service.  To skip the rest of the flow: 
+#### 中止流(flow)
 
-* the flow needs to be added to builder with `abortable`, e.g., `b.add(authorization abortable)`.
-* call `abortWith` on `RequestContext` with an `HttpResponse` when you need to abort.
+在某些情况下，管道中的一个阶段可能需要中止流并返回一个`HttpResponse`，例如，在进行身份验证/授权时。在这种情况下，应跳过管道的其余部分，并且请求不应到达squbs服务。要跳过其余的流：
 
-In the below `DummyAbortableBidiFlow ` example, `authorization ` is a bidi flow with `abortable` and it aborts the flow is user is not authorized: 
+* 需要将流添加到具有`abortable`的生成器中，例如，`b.add(authorization abortable)`。
+* 当你需要中止时，在`RequestContext`上调用带有`HttpResponse`的`abortWith`。
+
+下面`DummyAbortableBidiFlow `例子，`authorization`是一个带有`abortable`的bidi flow，并且当用户没有授权的时候中止流：
 
 ##### Scala
 
@@ -240,8 +240,7 @@ public class DummyAbortableBidiFlow extends japi.PipelineFlowFactory {
 }
 ```
 
-Once a flow is added with `abortable`, a bidi flow gets connected.  This bidi flow checks the existence of `HttpResponse` and bypasses or sends the request downstream.  Here is how the above `DummyAbortableBidiFlow` looks:
-
+一旦流添加了`abortable`，bidi flow就会被连接。此bidi flow检查是否存在`HttpResponse`并绕过或发送请求到下游。上述`DummyAbortableBidiFlow`看起来是这样：
 
 ```
                                                 +-----------------------------------+
