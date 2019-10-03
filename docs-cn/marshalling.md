@@ -1,23 +1,26 @@
-# Marshalling and Unmarshalling
+# 编组和解组
 
-### Overview
+### 概述
 
-Marshalling and unmarshalling is used both on the client and server side. On the server side it is used to map an incoming request to a Scala or Java object and to map a Scala or Java object to an outgoing response. Similarly, on the client side, it is used to marshal an object to an outgoing HTTP request and unmarshal it from an incoming response. There could be a multitude of content formats for marshalling/unmarshalling, common ones are JSON and XML. Please see the following pages for quick examples of JSON marshalling and unmarshalling in Akka HTTP:
+编组和解组同时在客户端和服务器端使用。在服务器端，它用于将传入请求映射到Scala或Java对象，并将scala或Java对象映射到一个传出的响应。同样地，在客户端，它用于编组对象到一个发出HTTP请求和从一个传入的响应解组对象。有许多内容格式用于编组/解组，常见的是JSON和XML。参阅以下页面，以获取Akka HTTP中JSON编组和解组的快速示例:
 
 * Scala - [spray-json Support](http://doc.akka.io/docs/akka-http/current/scala/http/common/json-support.html#spray-json-support)
 * Java - [Jackson Support](http://doc.akka.io/docs/akka-http/current/java/http/common/json-support.html#json-support-via-jackson).
 
-Akka HTTP provides marshalling/unmarshalling facilities explained in [Scala marshalling](http://doc.akka.io/docs/akka-http/current/scala/http/common/marshalling.html)/[unmarshalling](http://doc.akka.io/docs/akka-http/current/scala/http/common/unmarshalling.html) and [Java marshalling](http://doc.akka.io/docs/akka-http/current/java/http/common/marshalling.html)/[unmarshalling](http://doc.akka.io/docs/akka-http/current/java/http/common/unmarshalling.html). Also, there are other open source marshallers and unmarshallers for Akka HTTP available for different formats and using different object marshalling/unmarshalling implementations.
+Akka HTTP提供了编组/解组工具，阐述于[Scala marshalling](http://doc.akka.io/docs/akka-http/current/scala/http/common/marshalling.html)/[unmarshalling](http://doc.akka.io/docs/akka-http/current/scala/http/common/unmarshalling.html)和[Java marshalling](http://doc.akka.io/docs/akka-http/current/java/http/common/marshalling.html)/[unmarshalling](http://doc.akka.io/docs/akka-http/current/java/http/common/unmarshalling.html)。此外，还有其它的开源编组和解组工具为Akka HTTP提供不同格式和使用不同对象实现编组/解组。
 
-squbs provides marshallers for cross-language environments. For instance, when working with a mixed object hierarchy having both Scala case classes as well as Java beans. For simple, single-language environments, please use the provided marshallers or other open source marshallers directly.
+squbs为跨语言环境提供编组工具。例如，在处理既有Scala样例类，也有Java bean的混合对象层次结构时。对于简单、单语言的环境，请直接使用已提供的编组工具或其他开源编组工具。
 
-In addition, squbs also adds a Java API for manual marshalling/marshalling. Manual access to marshallers and unmarshallers is useful for stream-based applications where some work may need to be done in a stream stage. It is also useful for testing marshaller configurations to ensure the right format is achieved.
+此外，squbs还添加了一个用于手动编组/解组的Java API。手动访问编组器和解组器对于基于流的应用程序非常有用，在这些应用程序中，一些工作可能需要在一个流阶段完成。它还有助于测试编组器配置，以确保获得正确的格式。
 
-This document discusses the marshallers and unmarshallers provided by squbs, and the facilities you can use to invoke these marshallers and unmarshallers manually. This document **does not** address the use of marshallers and unmarshallers as part of the Akka HTTP Routing DSL. Please see the Akka HTTP Routing DSL [Scala](http://doc.akka.io/docs/akka-http/current/scala/http/routing-dsl/directives/marshalling-directives/index.html#marshallingdirectives) and [Java](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/directives/marshalling-directives/index.html#marshallingdirectives-java) marshalling directives for using marshallers, including ones provided in this document, in the Routing DSL.
 
-### Dependency
+本文档讨论squbs提供的编组器和解组器，以及可以用来手动调用这些编组器和解组器的工具。本文档**没有**涉及作为Akka HTTP路由DSL那部分的编组器和解组器的使用。
 
-Add the following dependencies to your `build.sbt` or scala build file:
+请查看Akka HTTP路由DSL [Scala](http://doc.akka.io/docs/akka-http/current/scala/http/routing-dsl/directives/marshalling-directives/index.html#marshallingdirectives)和[Java](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/directives/marshalling-directives/index.html#marshallingdirectives-java)用于在路由DSL中使用编组器，包括本文档中提供的一个，在路由DSL中。
+
+### 依赖
+
+增加如下依赖到你的`build.sbt`或者scala构建文件：
 
 ```scala
 "org.squbs" %% "squbs-ext" % squbsVersion,
@@ -27,7 +30,7 @@ Add the following dependencies to your `build.sbt` or scala build file:
 "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion
 ```
 
-The followings are optional components depending on your marshalling formats and libraries you want to use. They may be combined to support multiple formats.
+以下是可选的组件，具体取决于您要使用的编组格式和库。它们可以组合起来支持多种格式。
 
 ```scala
 // To use json4s native...
@@ -43,23 +46,23 @@ The followings are optional components depending on your marshalling formats and
 "com.fasterxml.jackson.module" % "jackson-module-parameter-names" % jacksonVersion,
 ```  
 
-### Usage
+### 用法
 
 #### JacksonMapperSupport
 
-The `JacksonMapperSupport` provides JSON marshallers/unmarshallers based on the popular Jackson library. It allows global as well as per-type configuration of Jackson `ObjectMapper`s.
+`JacksonMapperSupport`提供JSON编组/解组，基于广流行的Jackson库。它允许Jackson的`ObjectMapper`按全局和按每种类型配置。
 
-Please see [Jackson Data Binding documentation](http://wiki.fasterxml.com/JacksonFAQ#Data_Binding.2C_general) for detail on `ObjectMapper` configuration.
+请查看[Jackson数据绑定文档](http://wiki.fasterxml.com/JacksonFAQ#Data_Binding.2C_general)有关`ObjectMapper`配置的细节。
 
 ##### Scala
 
-You just need to import the `JacksonMapperSupport._` to expose its implicit members in the scope of marshaller/unmarshaller usage in Scala code:
+你仅需要在Scala代码中引入`JacksonMapperSupport._`，以便将它的隐式成员暴露在编组/解组的作用域内：
 
 ```scala
 import org.squbs.marshallers.json.JacksonMapperSupport._
 ```
 
-Both automatic and manual marshallers will implicitly make use of the marshallers provided by this package. The following code shows various ways to configure the `DefaultScalaModule` with the `ObjectMapper`:
+自动和手工编组工具都将隐式使用此包提供的编组工具。下面的代码展示了使用`ObjectMapper`配置`DefaultScalaModule`的各种方法：
 
 ```scala
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -84,7 +87,7 @@ JacksonMapperSupport.register[MyScalaClass](
 
 ##### Java
 
-The marshallers and unmarshallers can be obtained from the `marshaller` and `unmarshaller` methods in `JacksonMapperSupport`, passing the class instance of the type to marshal/unmarshal as follows:
+编组器和解组器可以从`JacksonMapperSupport`中的`marshaller`和`unmarshaller`方法中获得，将类型的类实例传递给编组/解组的方法如下:
 
 ```java
 import akka.http.javadsl.marshalling.Marshaller;
@@ -101,9 +104,9 @@ Unmarshaller<HttpEntity, MyClass> myUnmarshaller =
     unmarshaller(MyClass.class);
 ```
 
-These marshallers and unmarshallers can be used as part of the [Akka HTTP Routing DSL](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/overview.html) or as part of [invoking marshalling/unmarshalling](#invoking-marshallingunmarshalling) discussed in this document, below.
+可将这些编组器和解组器用作[Akka HTTP Routing DSL](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/overview.html)的一部分或[invoking marshalling/unmarshalling](#invoking-marshallingunmarshalling)的一部分，随后将在本文件中讨论。
 
-The following examples configure the `DefaultScalaModule` with the `ObjectMapper`:
+以下示例使用`ObjectMapper`配置`DefaultScalaModule`：
 
 ```java
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -128,31 +131,31 @@ JacksonMapperSupport.register(MyClass.class
 
 #### XLangJsonSupport
 
-The XLangJsonSupport adds cross language support by delegating marshalling and unmarshalling to:
+XLangJsonSupport 通过委派编组和解组来增加跨语言支持：
 
 * Json4s for Scala classes
 * Jackson for Java classes
 
-These are generally the preferred marshallers for each language as they support language-specific conventions without further configuration. They are also generally better optimized for the different conventions.
+这些通常是每种语言的首选编组工具，因为它们支持特定于语言的约定，而无需进一步配置。它们通常对不同的约定也有更好的优化。
 
-However, the decision to use Json4s or Jackson is made from the type of the object passed in for marshalling/unmarshalling. If you have a mixed object hierarchy you may still need to configure the marshalling/unmarshalling facilities to support different conventions as illustrated in the followings:
+然而，使用Json4s或Jackson的决定是由传递给编组/解组的对象的类型决定的。如果您有混合对象层次结构，则可能仍需要配置编组/解组工具来支持不同的约定，如下所示：
 
-* Scala case class referencing Java Beans. Since the top-level object is of a Scala case class, Json4s will be chosen. But it does not know how to marshal/unmarshal Java Beans. A custom serializer needs to be added to Json4s to handle these Java Beans.
-* Java Beans referencing Scala case class. Since the top-level object is a Java Bean, Jackson will be chosen. Jackson by default does not know how to marshal/unmarshal case classes. You need to register `DefaultScalaModule` to the Jackson `ObjectMapper` to handle such cases.
+* 引用Java Bean的Scala样例类。由于顶级对象是Scala样例类，因此将选择Json4s。但它不知道如何编组/解组Java Bean。需要将一个自定义序列化程序添加到Json4s来处理这些Java bean。
+* 引用Scala样例类的Java Bean。由于顶级对象是Java Bean，因此将选择Jackson。Jackson默认不知道如何编组/解组样例类。你需要注册`DefaultScalaModule`到Jackson `ObjectMapper`来处理这样的样例。
 
-A general guideline for marshalling/unmarshalling mixed language  object hierarchies: Unless Json4s optimizations are preferred, it is easier to configure Jackson to handle Scala by just registering `DefaultScalaModule` to the `ObjectMapper`.
+编组/解组混合语言对象层次结构的一般准则：除非首选Json4s优化，否则更容易通过将`DefaultScalaModule`注册到`ObjectMapper`，来配置Jackson来处理Scala。
 
-Like `JacksonMapperSupport`, it supports per-type configuration of the marshaller and unmarshaller. It allows configuration both for Json4s and Jackson.
+与`JacksonMapperSupport`一样，它支持编组和解组的每种类型配置。它支持Json4s和Jackson的配置。
 
 ##### Scala
 
-You just need to import the `XLangJsonSupport._` to expose its implicit members in the scope of marshaller/unmarshaller usage in Scala code:
+你仅需要在Scala代码中引入`XLangJsonSupport._`，以便将它的隐式成员暴露在编组/解组的作用域内：
 
 ```scala
 import org.squbs.marshallers.json.XLangJsonSupport._
 ```
 
-Both automatic and manual marshallers will implicitly make use of the marshallers provided by this package. The following provide samples of configuring `XLangJsonSupport`:
+自动和手工编组工具都将隐式使用此包提供的编组工具。下面的代码提供了`XLangJsonSupport`配置案例：
 
 ```scala
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -191,7 +194,7 @@ XLangJsonSupport.register[MyOtherClass](DefaultFormats + MySerializer)
 
 ##### Java
 
-The marshallers and unmarshallers can be obtained from the `marshaller` and `unmarshaller` methods in `XLangJsonSupport`, passing the class instance of the type to marshal/unmarshal as follows:
+编组器和解组器可以从`XLangJsonSupport`中的`marshaller`和`unmarshaller`方法中获得，将类型的类实例传递给`marshal`/`unmarshal`，如下所示：
 
 ```java
 import akka.http.javadsl.marshalling.Marshaller;
@@ -208,9 +211,9 @@ Unmarshaller<HttpEntity, MyClass> myUnmarshaller =
     unmarshaller(MyClass.class);
 ```
 
-These marshallers and unmarshallers can be used as part of the [Akka HTTP Routing DSL](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/overview.html) or as part of [invoking marshalling/unmarshalling](#invoking-marshallingunmarshalling) discussed in this document, below.
+这些编组器和解组器被使用，作为[Akka HTTP Routing DSL](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/overview.html)的一部分或[invoking marshalling/unmarshalling](#invoking-marshallingunmarshalling)的一部分，后续将在本文件中讨论。
 
-The following provide samples of configuring XLangJsonSupport:
+下面提供了配置`XLangJsonSupport`的示例:
 
 ```java
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -245,13 +248,13 @@ XLangJsonSupport.register(MyOtherClass.class, XLangJsonSupport.jacksonSerializat
 XLangJsonSupport.addSerializers(MyOtherClass.class, new MySerializer(), new MyOtherSerializer());
 ```
 
-#### Invoking Marshalling/Unmarshalling
+#### 调用编组/解组
 
-Besides using marshallers and marshallers as part of Akka HTTP Routing DSL, manual invocation of marshalling and unmarshalling is often required for use in both server-side and client-side `Flow`s as well as for testing.
+除了使用编组和解组作为Akka HTTP路由DSL的一部分之外，还经常需要手动调用编组和解组，以便在服务器端和客户端`Flow`以及测试中使用。
 
 ##### Scala
 
-Akka provides a great [Scala DSL for marshalling and unmarshalling](http://doc.akka.io/docs/akka-http/current/scala/http/common/marshalling.html#using-marshallers). Its use can be seen in the example below:
+Akka提供了一个强大的[Scala DSL for marshalling and unmarshalling](http://doc.akka.io/docs/akka-http/current/scala/http/common/marshalling.html#using-marshallers)。它的使用可以在下面的例子中看到：
 
 ```scala
 import akka.actor.ActorSystem
@@ -273,7 +276,8 @@ Unmarshal(entity).to[MyType]
 ```
 
 ##### Java
-The `MarshalUnmarshal` utility class is used for manually marshalling and unmarshalling objects using any `Marshaller` and `Unmarshaller` defined in Akka HTTP's JavaDSL. It's use can be seen in the example below:
+
+`MarshalUnmarshal`实用程序类用于手动编组和解组对象，使用Akka HTTP的JavaDSL中定义的任何`Marshaller`和`Unmarshaller`。它的用法可以在下面的例子中看到：
 
 ```java
 import akka.actor.ActorSystem;

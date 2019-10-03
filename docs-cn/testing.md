@@ -1,15 +1,16 @@
-# Testing squbs Applications
-squbs supports ScalaTest 3.X for Scala, and TestNG & JUnit for Java test frameworks.
+# 测试squbs应用
 
-## Dependencies
+squbs支持Scala的ScalaTest 3.X，TestNG和Java测试框架的JUnit
 
-To use test utilities mentioned in this documentation, simply add the following dependencies in your `build.sbt` file or Scala build script:
+## 依赖
+
+要使用文档中提到的测试工具，只需简单的添加如下依赖在你的`build.sbt`文件或者Scala构建脚本：
 
 ```scala
 "org.squbs" %% "squbs-testkit" % squbsVersion
 ```
 
-Optionally, you should also include the following dependencies based upon whether they are needed in your tests:
+另外，您还应该根据是否需要在测试中包含以下依赖项：
 
 ```scala
 // Testing RouteDefinition...
@@ -25,15 +26,15 @@ Optionally, you should also include the following dependencies based upon whethe
 
 ## CustomTestKit
 
-The `CustomTestKit` is used for starting a full blown squbs instance needed for testing bits and pieces of applications.  `CustomTestKit` is simple to use and needs no configuration by default, yet allows customizations and flexibility for your tests.  With `CustomTestKit` you can start any number of `ActorSystem` and `Unicomplex` instances (one per `ActorSystem`) with different configurations - all on the same JVM.  Here are some features:
+`CustomTestKit`用于启动一个完整的squbs实例，用于测试应用的各个部分。`CustomTestKit`使用简单，默认情况下不需要配置，但允许自定义和灵活的测试。通过`CustomTestKit`，你可以使用不同配置启动任意数量的`ActorSystem`和`Unicomplex`实例(每个一个`ActorSystem`) - 都在相同的JVM。一些特性如下：
 
-   * It automatically sets actor system name to spec/test class name for simplicity and also to ensure `ActorSystem` instances do not conflict.  But, it also allows actor system name to be passed in the constructor.
-   * Tests extending `CustomTestKit` can run in parallel in the same JVM.
-   * Starts and stops squbs automatically.
-   * Starts well-known actors and service in `src/main/resources/META-INF/squbs-meta.conf` and `src/test/resources/META-INF/squbs-meta.conf` by default.  But, allows passing `resources` to be scanned in the constructor.
-   * Allows custom configuration to be passed in the constructor.
+   * 它自动将actor system名称简单的设置为spec/test类名称，以确保`ActorSystem`实例不发生冲突。但是，它还允许在构造函数中传递actor system名称。
+   * 继承`CustomTestKit`的测试可以在同一JVM中并行运行。
+   * 自动启动和关闭squbs。
+   * 默认启动`src/main/resources/META-INF/squbs-meta.conf`和`src/test/resources/META-INF/squbs-meta.conf`中的well-known actor和服务。但是，允许在构造函数中传递被扫描的`resources`。
+   * 允许在构造器中传递自定义配置。
 
-Here is an example usage of `CustomTestKit` in ScalaTest:
+以下是在ScalaTest中应用`CustomTestKit`的实例：
 
 ```scala
 import org.squbs.testkit.CustomTestKit
@@ -45,7 +46,7 @@ class SampleSpec extends CustomTestKit with FlatSpecLike with Matchers {
 }
 ``` 
 
-Both TestNG and JUnit are supported for Java users:
+TestNG和JUnit用于支持Java用户：
 
 ```java
 import org.squbs.testkit.japi.CustomTestKit
@@ -59,9 +60,9 @@ public class SampleTest extends CustomTestKit {
 }
 ```
 
-### Passing configuration to `CustomTestKit`
+### 传递配置给`CustomTestKit`
 
-If you would like to customize the actor system configuration, you can pass a `Config` object to `CustomTestKit`:
+如果你想要自定义actor system配置，你可以传递一个`Config`对象给`CustomTestKit`：
 
 ```scala
 object SampleSpec {
@@ -82,7 +83,7 @@ class SampleSpec extends CustomTestKit(SampleSpec.config) with FlatSpecLike with
 }
 ```
 
-Here is the TestNG/JUnit version of this test:
+以下是测试的TestNG/JUnit版本:
 
 ```java
 import org.squbs.testkit.japi.CustomTestKit;
@@ -104,13 +105,13 @@ public class SampleTest extends CustomTestKit {
 }
 ```
 
-The following sections show customizations only in ScalaTest; however, all these customizations are supported for TestNG and JUnit as well.  For customizations, provide a `public` constructor in your TestNG/JUnit tests and call `super` with custom parameters.  Check [squbs-testkit/src/test/java/org/squbs/testkit/japi](https://github.com/paypal/squbs/tree/master/squbs-testkit/src/test/java/org/squbs/testkit/japi) for more TestNG and JUnit samples.
+以下部分显示的定制仅限于ScalaTest；但是，TestNG和JUnit也支持所有这些定制。对于定制，在TestNG/JUnit测试中提供一个`public`构造函数，并使用自定义参数调用`super`。检查[squbs-testkit/src/test/java/org/squbs/testkit/japi](https://github.com/paypal/squbs/tree/master/squbs-testkit/src/test/java/org/squbs/testkit/japi)了解更多TestNG和JUnit的实例.
 
-Specifically for JUnit, avoid setting actor system name in your tests (letting `CustomTestKit` set the actor system name is in general a good practice though).  JUnit creates a new fixture instance for each `@Test` method which potentially causes actor system conflicts.  `AbstractCustomTestKit` avoids this by appending an incremented integer to each actor system name.
+特别是对于JUnit，避免在您的测试中设置actor system名称(尽管让`CustomTestKit`设置actor system名通常是一个好的实践)。JUnit为每个`@Test`方法创建一个新的fixture实例，这可能会导致actor system冲突。`AbstractCustomTestKit`通过向每个actor system名附加一个递增的整数来避免这种情况。
 
-### Starting well-known actors and services with `CustomTestKit`
+### 使用`CustomTestKit`启动well-known actor和服务
 
-`CustomTestKit` will automatically start well-known actors and services in `src/test/resources/META-INF/squbs-meta.conf` (see [Bootstrapping squbs](bootstrap.md#well-known-actors)).  However, if you would like provide different resource paths, you can do so by passing a `Seq` *(Scala)* or `List` *(Java)* of resources to the constructor.  `withClassPath` controls whether to scan entire test classpath for `META-INF/squbs-meta.conf` files or not.
+`CustomTestKit`自动启动`src/test/resources/META-INF/squbs-meta.conf`中配置的well-known actor和服务(查看[引导squbs](bootstrap.md#well-known-actors))。然而，如果你想要提供不同的资源路径，你可以传递一个资源的`Seq` *(Scala)* 或 `List` *(Java)* 给构造器。`withClassPath`控制是否扫描整个测试类路径以获得`META-INF/squbs-meta.conf`文件。
 
 ```scala
 object SampleSpec {
@@ -124,11 +125,11 @@ class SampleSpec extends CustomTestKit(SampleSpec.resources, withClassPath = fal
 }
 ```
 
-Please note, `CustomTestKit` allows passing `config` and `resources` together as well.
+请注意，`CustomTestKit`允许一起传递`config`和`resources`。
 
-#### Port binding in tests
+#### 测试中的端口绑定
 
-Starting services requires port binding.  To prevent port conflicts, we should let the system pick a port by setting listeners' `bind-port` to 0, e.g., `default-listener.bind-port = 0` (`CustomTestKit`, if used with default configuration, sets `bind-port = 0` for all listeners).  `squbs-testkit` comes with a `trait` named `PortGetter` that allows retrieving the port picked by the system.  `CustomTestKit` comes with `PortGetter` already mixed in, so you can use `port` value.  
+启动服务需要端口绑定。为了防止端口冲突，应当让系统挑选一个端口，通过将监听器的`bind-port`设置0，例如，`default-listener.bind-port = 0`(`CustomTestKit`如果使用默认配置，对所有监听器设置`bind-port = 0`)。`squbs-testkit`自带名为`PortGetter`的`trait`，允许检索系统选择的端口。`CustomTestKit`自带的`PortGetter`已经混入，所以你可以使用`port`值。
 
 ```scala
 class SampleSpec extends CustomTestKit(SampleSpec.resources)
@@ -140,7 +141,7 @@ class SampleSpec extends CustomTestKit(SampleSpec.resources)
 
 ```
 
-By default, `PortGetter` returns `default-listener`'s port, which is the most common one.  If you need to retrieve another listener's bind port, you can either override `listener` method or pass listener name to `port` method:
+默认，`PortGetter`返回`default-listener`的端口，这是最常见的。如果你需要检索其它监听器绑定的端口，可以覆盖`listener`方法或者传递监听器名称给`port`方法：
 
 ```scala
 class SampleSpec extends CustomTestKit(SampleSpec.resources)
@@ -154,9 +155,9 @@ class SampleSpec extends CustomTestKit(SampleSpec.resources)
 }
 ```
 
-### Manual `UnicomplexBoot` initialization
+### 手工`UnicomplexBoot`初始化
 
-`CustomTestKit` allows a `UnicomplexBoot` instance to be passed as well.  This allows full customization of the bootrap.  Please see [Bootstrapping squbs](bootstrap.md) for more information on booting the Unicomplex.
+`CustomTestKit`也允许传入一个`UnicomplexBoot`实例。这允许完全定制引导。请看[引导squbs](bootstrap.md)章节查看详细信息。
 
 ```scala
 object SampleSpec {
@@ -183,17 +184,17 @@ class SampleSpec extends CustomTestKit(SampleSpec.boot) with FunSpecLike with Ma
 }
 ```
 
-### Shutting Down
+### 关闭
 
-For large tests with many instances of `CustomTestKit` running in parallel, it is important to shutdown properly after the test. The shutdown mechanism depends on the test framework and how `CustomTestKit` is constructed, as follows:
+对于具有多个并行运行的`CustomTestKit`实例的大型测试，在测试后正确关机很重要。关机机制取决于测试框架以及如何构造`CustomTestKit`，如下所示：
 
 #### ScalaTest
 
-The `CustomTestKit` shuts down automatically, unless you override the `afterAll()` method. No further actions are needed.
+`CustomTestKit`自动关闭，除非你覆盖了`afterAll()`方法。不需要采取进一步的行动。
 
 #### TestNG
 
-Use the `@AfterClass` annotation to annotate a method calling `shutdown()` as follows:
+使用`@AfterClass`注解来注释一个方法调用`shutdown()`，如下所示：
 
 ```java
     @AfterClass
@@ -204,7 +205,7 @@ Use the `@AfterClass` annotation to annotate a method calling `shutdown()` as fo
 
 #### JUnit
 
-JUnit creates an instance of the class for every individual test in the class. This also means a new instance of the `Unicomplex` is created for each test method. This can be resource intensive. To ensure proper shutdown of the individual instances, use the `@After` JUnit annotation to annotate a method calling `shutdown()` as follows:
+JUnit为类中的每个测试创建类的实例。这也意味着为每个测试方法创建一个新的`Unicomplex`实例。这可能是资源密集型的。要确保正确地关闭各个实例，请使用`@After` JUnit注解来注释一个方法调用`shutdown()`，如下所示：
 
 ```java
     @After
@@ -213,28 +214,25 @@ JUnit creates an instance of the class for every individual test in the class. T
     }
 ```
 
-Note: If you construct the `CustomTestKit` passing a `UnicomplexBoot` object on the `super(boot)` call, use caution how and when to shutdown. If the `UnicomplexBoot` instance is created per-class, meaning one single instance is used for all test methods, the shutdown also needs to happen only once. Use JUnit's `@AfterClass` annotation to annotate a static shutdown method. But if the `UnicomplexBoot` instance is created per test method - the default behavior, the `@After` annotation should be used similar to default construction of `CustomTestKit`.
+注意：如果您构造`CustomTestKit`时，在`super(boot)`调用上传递一个`UnicomplexBoot`对象，那么请注意如何以及何时关闭。如果`UnicomplexBoot`实例是为每个类创建的，这意味着一个实例用于所有测试方法，那么关闭也只需要发生一次。使用JUnit的`@AfterClass`注解来注释静态关闭方法。但是如果`UnicomplexBoot`实例是根据每个测试方法创建的 - 默认的行为，`@After`注释应该使用类似于`CustomTestKit`的默认构造。
 
-## Testing Akka Http Routes using Akka Http TestKit
+## 使用Akka Http TestKit测试Akka Http路由
 
-The `akka-http-testkit` needs to be added to the dependencies in order to test routes.  Please add the followings to your dependencies:
+为了测试路由，`akka-http-testkit`需要添加到依赖中。请增加如下依赖：
 
 ```
 "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % "test"
 ```
 
-### Usage
+### 用法
 
-The squbs testkit provides utilities to construct routes from the `RouteDefinition` trait *(Scala)* or the `AbstractRouteDefinition` class *(Java)* and has utilities for both standalone and full system mode  where the infrastructure and cubes can be brought up as part of the test.
+squbs testkit提供实用工具用于从`RouteDefinition`特质*(Scala)* 或`AbstractRouteDefinition`类*(Java)*构造路由，也有实用工具用于单机和整个系统模式，在这里基础设施和cube可以作为测试的一部分。
 
 ##### Scala
 
-`TestRoute` is provided
-for constructing and obtaining routes from the `RouteDefinition`. To use it, just pass the `RouteDefinition` as a type
-parameter to `TestRoute`. This will obtain you a fully configured and functional route for the test DSL as can be seen
-in the example below.
+`TestRoute`用于从`RouteDefinition`构造和获得路由。要使用它，仅需将`RouteDefinition`作为一个类型参数传递给`TestRoute`。这将为您获得一个完全配置和功能路由用于测试DSL, 如下面的示例所示。
 
-Specifying the `RouteDefinition`
+指定`RouteDefinition`
 
 ```scala
 import org.squbs.unicomplex.RouteDefinition
@@ -252,7 +250,7 @@ class MyRoute extends RouteDefinition {
 }
 ```
 
-Implementing the test, obtaining route from `TestRoute[MyRoute]`:
+实现测试，从`TestRoute[MyRoute]`获取路由：
 
 ```scala
 import akka.http.scaladsl.testkit.ScalatestRouteTest
@@ -271,28 +269,27 @@ class MyRouteTest extends FlatSpecLike with Matchers with ScalatestRouteTest {
 }
 ```
 
-Alternatively, you may also want to pass a web context to your route. This can be done by passing it to `TestRoute` as follows:
+或者，你也可能希望将web上下文传递到你的路由。这可以通过将其传递给`TestRoute`，如下所示：
 
 ```scala
   val route = TestRoute[MyRoute](webContext = "mycontext")
 ```
 
-or just pass `"mycontext"` without the parameter name. The `TestRoute` signature without parameters is equivalent to passing the root context `""`.
+或者仅传递`"mycontext"`不带参数名称。没有参数的`TestRoute`签名等同于传递根上下文`""`。
 
 ##### Java
 
-In order to test the route, the test needs to extend the proper `RouteTest` abstract class for the test framework of your choice. Choose to extend `org.squbs.testkit.japi.TestNGRouteTest` if you are using TestNG, or `org.squbs.testkit.japi.JUnitRouteTest` if you're using JUnit. The usage for both are the same.
+为了测试路由，测试需要为您选择的测试框架扩展适当的`RouteTest`抽象类。选择扩展`org.squbs.testkit.japi.TestNGRouteTest`如果您正在使用TestNG，或`org.squbs.testkit.japi.JUnitRouteTest`如果您正在使用JUnit。两者的用法是一样的。
 
-Once the test extends one of the `RouteTest` classes you can construct and obtain a `TestRoute` from the `AbstractRouteDefinition` by passing the class to `testRoute(MyRoute.class)` call as follows:
+一旦测试扩展了一个`RouteTest`类，你可以从`AbstractRouteDefinition`构造一个`TestRoute`，通过传递类到`testRoute(MyRoute.class)`调用，如下所示：
 
 ```java
 TestRoute myRoute = testRoute(MyRouteDefinition.class);
 ```
 
-This will obtain you a fully configured and functional route for the test DSL as can be seen
-in the example below.
+这将为您获得测试DSL的完整配置和功能路由，如下面的示例所示。
 
-Specifying the `RouteDefinition`
+指定`RouteDefinition`
 
 ```java
 import org.squbs.unicomplex.AbstractRouteDefinition;
@@ -310,7 +307,7 @@ class MyRoute extends AbstractRouteDefinition {
 }
 ```
 
-Implementing the test, obtaining route from `testRoute(MyRoute.class)`:
+实现测试，从`testRoute(MyRoute.class)`获取路由:
 
 ```java
 import org.squbs.testkit.japi.JUnitRouteTest;
@@ -327,22 +324,22 @@ public class MyRouteTest extends JUnitRouteTest {
 }
 ```
 
-Alternatively, you may also want to pass a web context to your route. This can be done by passing it to `TestRoute` as follows:
+或者，您可能还希望将web上下文传递给路由。这可以通过以下方式将其传递给`TestRoute`来实现：
 
 ```java
 TestRoute myRoute = testRoute("mycontext", MyRoute.class);
 ```
 
-The `TestRoute` signature without parameters is equivalent to passing the root context `""`.
+没有参数的`TestRoute`签名相当于传递根上下文`""`。
 
 ### Using TestRoute with CustomTestKit
 
-A need may arise to bootstrap `Unicomplex` while testing with `TestRoute`, such as when:
+在使用`TestRoute`测试时，可能会出现引导`Unicomplex`的需求，例如这个时候：
 
-   * a squbs well-known actor is involved in request handling.
-   * [The Actor Registry](registry.md) is used during request handling.
+   * 一个squbs的well-known actor参与了请求处理。
+   * 在请求处理期间使用[Actor注册](registry.md)。
 
-Using Akka's `TestKit` together with `ScalatestRouteTest` can be tricky as they have conflicting initialization.  squbs provides test utilities named `CustomRouteTestKit` *(Scala)*, `TestNGCustomRouteTestKit`, and `JUnitCustomRouteTestKit` *(Java, for each test framework)* to solve this problem.  `CustomRouteTestKit` supports all the APIs provided by `CustomTestKit`.  Here are example usages of `TestRoute` with `CustomRouteTestKit`:  
+将Akka的`TestKit`与`ScalatestRouteTest`一起使用可能会很棘手，因为它们初始化时有冲突。squbs提供了名为`CustomRouteTestKit` *(Scala)*和`JUnitCustomRouteTestKit` *(Java，用于每个测试框架)*的测试工具解决这个问题。`CustomRouteTestKit`支持由`CustomTestKit`提供的所有API。下面是通过`CustomRouteTestKit`使用`TestRoute`的例子：
 
 ##### Scala
 
@@ -389,7 +386,7 @@ public class MyRouteTest extends TestNGCustomRouteTestKit {
 }
 ```
 
-And the corresponding route to test would be as follows:
+相应的测试路由如下:
 
 ```java
 import akka.http.javadsl.server.Route;
@@ -411,8 +408,8 @@ public class ReverserRoute extends AbstractRouteDefinition {
 
 ```
 
-**Note:** To use `CustomRouteTestKit`, please ensure Akka Http testkit is in your dependencies as described [above](#testing-akka-http-routes-using-akka-http-testkit).
+**注意:** 要使用`CustomRouteTestKit`，请确保Akka Http testkit在您所描述的依赖项中，如[上面](#testing-akka-http-routes-using-akka-http-testkit)描述的那样。
 
-#### Shutting Down
+#### 关闭
 
-The `CustomRouteTestKit` abstract classes and traits are specific to the test framework and therefore they have been pre-instrumented with test framework hooks to start and to shutdown properly. Hence there is no need to take care of shutting down the `Unicomplex` in test cases using any flavor of `CustomRouteTestKit`.
+`CustomRouteTestKit`抽象类和特质是特定于测试框架的，因此，它们已经预先装备了测试框架钩子，以正确地启动和关闭。因此，不需要在测试用例中使用任何形式的`CustomRouteTestKit`来关闭`Unicomplex`。

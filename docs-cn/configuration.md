@@ -1,6 +1,6 @@
-# Configuration Reference
+# 配置参考
 
-The followings lists the squbs configuration as defined in `reference.conf`:
+下面列出了在`reference.conf`中定义的squbs配置：
 
 ```
 squbs {
@@ -103,23 +103,23 @@ default-materializer {
 }
 ```
 
-## Blocking Dispatcher
+## 阻塞调度器
 
-The squbs `reference.conf` declares a `blocking-dispatcher` used for blocking I/O calls. This is a standard Akka dispatcher configuration. Please see [dispatchers](http://doc.akka.io/docs/akka/2.3.13/scala/dispatchers.html) in the Akka documentation for more detail.
+squbs的`reference.conf`定义了一个`blocking-dispatcher`用于阻塞I/O调用。这是一个标准的Akka调度器配置。请查看Akka文档中的[dispatchers](http://doc.akka.io/docs/akka/2.3.13/scala/dispatchers.html)了解更多细节。
 
-## Listeners
+## 监听器
 
-A listener defines a port binding and the behavior of this port binding such as security, authentication, etc. A default listener is provided by the squbs `reference.conf`. This can be overridden by the application providing its `application.conf` file or the `application.conf` file in its external config directory. Please see [Bootstrapping squbs](bootstrap.md#configuration-resolution) for details how squbs reads its configuration file.
+监听器定义端口绑定和此端口绑定的行为，比如安全性、身份验证等。squbs `reference.conf`提供了一个默认的监听器由。这可以由应用程序提供`application.conf`文件或在其外部配置目录中提供`application.conf`文件来重写。请查看[引导squbs](bootstrap.md#configuration-resolution)章节，了解squbs如何读取配置文件的细节。
 
-A listener is declared at the root level of the configuration file. The name generally follows the pattern `*-listener` but this is not a requirement. What defines the entry as a listener is the `type` field under the listener entry. It must be set to `squbs.listener`. Please see the `default-listener` example above on how to configure new listeners listening to different ports.
+一个监听器在配置文件根级别声明。通常名称遵循`*-listener`模式，但这不是必须的。将条目定义为监听器的是`type`字段。它必须设置为`squbs.listener`。请参阅前面的`default-listener`示例，了解如何配置新监听器监听不同的端口。
 
-A declared listener is not started unless a service route attaches itself to this listener. In other words, just declaring the listener does not automatically cause the listener to start unless there is a real use for the listener.
+一个已声明的监听器不会启动，除非服务路由将自身附加到此监听器。换言之，只声明监听器不会自动导致监听器启动，除非侦听器真正使用。
 
-## Materializers
+## 物化器
 
-A squbs materializer is nothing but an Akka Streams `Materializer` that is specified in the configuration.  This allows squbs to keep a registry of all materializers so that:
+一个squbs物化器仅仅是一个Akka Stream `Materializer`，其在配置中指定。这允许squbs保留所有物化器的注册表，以便：
 
-   * a `Materializer` can be accessed from different locations through an Akka Extension as follows:
+   * 通过Akka扩展从不同位置访问`Materializer`，如下所示：
 
      **Scala**
    
@@ -133,13 +133,13 @@ A squbs materializer is nothing but an Akka Streams `Materializer` that is speci
      final Materializer mat = Unicomplex.get(system).materializer("default-materializer")
      ```
 
-   * a materializer can be referenced from a [squbs listener](#listeners).
-   * The materializers in use by an application can be reported on JMX with the corresponding settings.
+   * 物化器可以从[squbs监听器](#listeners)引用。
+   * 通过相应的设置，应用程序在用的物化器，可在JMX被报告。
 
-A default materializer is provided by the squbs `reference.conf`.  Materializer creation is lazy.  Only the ones that are actually in use are created.
+在squbs的`reference.conf`中提供了一个默认的物化器。物化器的创建是惰性的。只有使用的才会真正创建。
 
-A materializer is declared at the root level of the configuration file. The name generally follows the pattern `*-materializer` but this is not a requirement. What defines the entry as a materializer is the `type` field under the listener entry. It must be set to `squbs.materializer`. Please see the `default-materializer` example above on how to configure new materializers.
+物化器在配置文件根级别声明。通常名称遵循`*-materializer`模式，但这不是必须的。将条目定义为物化器是物化器条目下的`type`字段。它必须设置为`squbs.materializer`。请参阅前面的`default-materializer`示例，了解如何配置新物化器。
 
-## Pipeline
+## 管道
 
-If defined, a default pipeline is installed for pre-processing every single request and post-processing every response. Services can specify a different pipeline, or none at all as described under [Bootstrapping squbs](bootstrap.md#services). Applications or infrastructure can implement their own pipelines for pre-processing needs such as logging or tracing. Please see detailed description of pipelines under [Request/Response Pipeline](pipeline.md).
+如果已定义，为`pre-processing`的每一个请求和`post-processing`的每一个响应安装了默认管道。服务可以指定一个不同的管道，或者根本不指定，就像在[引导squbs](bootstrap.md#services)中描述的那样。应用或基础设施可以为`pre-processing`需求(例如日志和追踪)实现他们自己的管道。请查看[请求/响应管道](pipeline.md)章节了解详细描述。
