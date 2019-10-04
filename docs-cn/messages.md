@@ -1,71 +1,42 @@
 
-# Message Guidelines
+# 消息指南
 
-Akka actors communicate via immutable messages. These can be defined anywhere in code. As squbs deals with messages
-communicated across cubes, such messages will have to be defined in a message project (or jar) that is a dependency
-of both the sender and receiver of these messages. These message projects commonly have a single file in a single
-package.
+Akka actor通过不可变的消息通信。可以在代码的任何地方定义。当squbs处理跨cube的消息通信时，这些消息必须定义在消息项目(或jar)，这些是这些消息发送者和接收者的依赖。这些消息项目通常在单个包中具有单个文件。
 
-Messages must be defined as immutable case classes (don't use vars in your case class definitions) or case objects in Scala, or immutable Java beans with constructors and only getters, no setters if they are written in Java.
-Messages are generally very simple and do not contain logic. Multiple message case classes or case objects
-are declared in a particular Scala file. Java classes are required to have one message class/type per file unless static inner classes are used.
+消息必须定义为不可变的样例类(在你的样例类定义中不要使用`var`)或样例对象，在Scala中。或者是不可变的Java bean，只有构造函数和getter，没有setter，如果是用Java编写的。消息通常非常简单，不包含逻辑。多个消息样例类或样例对象在一个特定的Scala文件中定义。Java类需要一个消息类/类型一个文件，除非使用静态内部类。
 
-Message jars should not have other dependencies. Ideally, they are all self-contained. Senders and/or receivers of such
-messages should not be subject to additional dependencies introduced by messages.
+消息jar包不应当有其他依赖。理想情况下，它们都是自包含的。这些消息的发送者和/或接收者不应因为消息而需要引入的额外依赖。
 
-## Constructing messages
+## 构建消息
 
-Following the Scala case class and case object pattern, construction of the messages are very straightforward and do not
-need an explicit call into the constructor. Case classes implicitly generate an associated factory object with proper
-apply and unapply methods allowing them to be pattern-matched very easily. Immutable Java beans carry much of the same properties as a Scala case class. However, their construction requires the `new` keyword. Moreover, they do not have a proper `equals()` and `hashcode()` implementations generated for them. Moreover, they cannot be used for Scala pattern extraction and have limited capabilities for Scala pattern matching. For projects with combinations of Java and Scala implementations, message declarations as Scala case classes (not case objects) is recommended.
+遵循Scala样例类和样例对象模式，消息的构造非常简单，不需要对构造函数进行显式调用。样例类隐式产生一个相关的工厂对象，带有适当的apply和unapply方法，这样对它们进行模式匹配时就非常简单。不可变的Java bean具有与Scala样例类相同的属性。然而，它们的构造需要`new`关键字。而且，它们没有为它们生成适当的`equals()`和`hashcode()`实现。此外，它们不能用于Scala模式提取，并且对于Scala模式匹配的能力有限。对于结合了Java和Scala实现的项目，建议使用Scala样例类(而不是样例对象)来消息声明。
 
-When integrating messages with database objects or other dependent infrastructure, it is common to provide message
-construction directly from these classes. Yet, we MUST NOT declare associate factory objects to provide apply methods
-to construct messages from the database object. Doing so would subject the message jar to dependencies on such database
-infrastructure. All other cubes using the message will consequently be subject to such database infrastructure
-dependencies.
+当将消息与数据库对象或其他依赖的基础设施集成时，通常可以直接从这些类提供消息构造。然而，我们***不能**声明关联工厂对象来提供apply方法来构造来自数据库对象的消息。这样做会使消息jar依赖于这样的数据库基础结构。因此，使用该消息的所有其他cube都将受制于此类数据库基础设施依赖项。
 
-A common pattern used for message construction is to provide a "Message" object inside the cube or package using
-such database (or other) infrastructure. This Message object provides a set of apply methods that
-the actors will use to construct the message, for instance from mutable data objects. To construct a message from such
-an object, the caller just needs to call
+用于消息构造的常见模式是使用数据库(或其他)基础设施的cube或包内提供"Message"对象。此消息对象提供了一组apply方法，actors将使用它们来构造消息，例如从可变数据对象。为了从这样的对象构造消息，调用者仅需调用
 
 ```
   targetActorRef ! Message(myDBObject)
 ```
 
-in Scala, or
+在Scala中，或
 
 ```
   targetActorRef.tell(Message.apply(myDBObject), getSelf());
 ```
 
-in Java.
+在Java中。
 
-This way the construction of messages which is dependent on the infrastructure will be contained in the cube producing
-such messages. Such dependencies won't leak to consumers of the message.
+通过这种方式，依赖于基础设施的消息的构造将包含在生成此类消息的cube中。这些依赖关系不会泄漏给消息的使用者。
 
-## Dealing with Large, Complex Messages
+## 处理大型、复杂的消息
 
-In some instances, especially with data objects, these objects have a class hierarchy and heavyweight constructors
-that could not easily be dealth with in a simple case class. The number of fields can be far beyond what is possible in
-case classes making it unappealing to do field pattern matching. Complex messages such as purchase orders, invoices
-commonly fall into this category. These limitations only apply to Scala case classes and not Java beans.
+在某些情况下，特别是在数据对象中，这些对象具有一个类层次结构和重量级构造函数，在一个简单的样例中不易处理。大量的字段可能远远超过样例类可能的情况，使其不具有字段模式匹配的吸引力。像采购订单、发票这样的复杂消息，通常属于这一类。这些限制仅适用于Scala样例类，而不是Java bean。
 
-The strategy to deal with such complex objects is to provide the message as traits declaring all fields. If there
-is a class hierarchy, subtypes should also be represented as traits extending from proper super type. This is done
-in the message project or jar.
+处理此类复杂对象的策略是将消息作为声明所有字段的特质提供。如果存在类层次结构，子类型也应表示为特质，从适当的超类型继承。这是在消息项目或jar中完成的。
 
-Then the Message object in the originating cube will commonly declare the concrete (or abstract) implementation of
-these messages with proper constructors from the mutable data objects. It is important to ensure the concrete or
-abstract implementation provides no functionality and should not declare additional fields except private ones
-to support the construction. In essence, it only implements the constructors to create the object extending the trait.
+然后，原始cube中的消息对象通常会使用来自可变数据对象的适当构造函数声明这些消息的具体(或抽象)实现。重要的是确保具体或抽象的实现不提供任何功能，并且不应该声明除私有字段之外的其他字段来支持构造。本质上，它只实现构造函数来创建扩展特质的对象。
 
-If fields defined in the trait or any extending trait derives its value from other fields that are set in the
-constructor implementation, these fields need to be marked as lazy to avoid NullPointerExceptions during initialization.
-This is because the trait will try to initialize all the fields at construction. The derived fields would reference
-not-yet set fields to be set in the constructor. Lazy initialization causes these fields to reference the other fields
-on first use, which is normally far after the construction of the object.
+如果字段定义在特质中，任何扩展的特质的值都来自其他字段，其在构造函数实现中设置，那么这些字段需要标记为`lazy`字段，以避免初始化过程中出现`NullPointerExceptions`异常。这是因为特质会尝试在构造时初始化所有字段。派生字段将引用要在构造函数中设置的尚未设置的字段。延迟初始化使这些字段在第一次使用时引用其他字段，这通常是在对象构造之后很久。
 
-By following this pattern, messages stay immutable and the message project would not add any dependencies on database
-or other infrastructure that can be propagated to the message consumer's dependency chain.
+遵循这个模式，消息仍然是不可变的，并且消息项目不会添加对数据库或者其它基础结构的依赖，这些依赖可能会传播到消息的消费者的依赖链。

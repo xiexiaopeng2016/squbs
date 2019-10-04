@@ -1,9 +1,9 @@
 
-# The Blocking Dispatcher for Blocking API Calls
+# 用于阻塞式API调用的阻塞式调度器
 
-This topic is not about dispatchers in general, but about squbs-specific dispatcher configurations. Please check the [Akka documentation](http://doc.akka.io/docs/akka/2.3.13/scala/dispatchers.html) for descriptions and details of dispatchers.
+本主题不是关于一般的调度器，而是关于squbs特定的调度器配置。请查看[Akka文档](http://doc.akka.io/docs/akka/2.3.13/scala/dispatchers.html)中关于调度器的详细信息。
 
-squbs adds another pre-configured dispatcher for use in blocking calls. Generally, these are used for synchronous calls to the database. The reference.conf defines the blocking-dispatcher as follows:
+squbs增加了另外一个预先配置的调度器用于阻塞式调用。通常，它们用于对数据库的同步调用。`reference.conf`定义了`blocking-dispatcher`，如下所示：
 
 ```
 blocking-dispatcher {
@@ -38,7 +38,7 @@ blocking-dispatcher {
 }
 ```
 
-For an actor to use the blocking dispatcher, just specify the actor configuration as in the following example:
+要让actor使用阻塞调度器，只需像下面的示例那样指定actor配置：
 
 ```
   "/mycube/myactor" {
@@ -46,6 +46,6 @@ For an actor to use the blocking dispatcher, just specify the actor configuratio
   }
 ```
 
-Without any actor using the blocking-dispatcher, the blocking-dispatcher won't be initialized and will not require any resources.
+如果没有任何actor使用`blocking-dispatcher`，`blocking-dispatcher`将不会被初始化，也不需要任何资源。
 
-**WARNING:** The blocking-dispatcher should only be used for blocking calls or performance could be severely impacted.
+**警告:** 阻塞式调度器只能应用于阻塞式调用，否则性能可能受到严重影响。

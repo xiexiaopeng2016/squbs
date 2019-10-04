@@ -1,20 +1,20 @@
-# Monitoring Actors at Runtime
+# 在运行时监控Actor
 
-## Overview
+## 概述
 
-The squbs-actormonitor module attaches monitoring to each actor in the actor system. For large number of actors, this can get intrusive. The number of actors to monitor can be configured through `application.conf`. Use judgement attaching this module in production. There is no user API to this module.
+`squbs-actormonitor`模块将监视附加到actor system中的每个actor。对于大量的actor，这可能会造成干扰。可以通过`application.conf`配置要监视的actor的数量。在生产中使用附加此模块的判断。此模块没有用户API。
 
-## Dependencies
+## 依赖
 
-Add the following dependency to your build.sbt or scala build file:
+在`build.sbt`或Scala构建文件添加如下依赖：
 
 ```
 "org.squbs" %% "squbs-actormonitor" % squbsVersion
 ```
 
-## Monitoring
+## 监控
 
-Each actor has a corresponding JMXBean(org.squbs.unicomplex:type=ActorMonitor,name=%actorPath) to expose the actor information:
+每一个actor都有一个相应的`JMXBean(org.squbs.unicomplex:type=ActorMonitor,name=%actorPath)`来暴露actor的信息：
 
 ```
  trait ActorMonitorMXBean {
@@ -28,9 +28,9 @@ Each actor has a corresponding JMXBean(org.squbs.unicomplex:type=ActorMonitor,na
 }
 ```
 
-## Configuration
+## 配置
 
-The following is the configuration entries for squbs-actormonitor:
+下面是`squbs-actormonitor`的配置项：
 
 ```
 squbs-actormonitor = {
@@ -39,14 +39,12 @@ squbs-actormonitor = {
 }
 ```
 
-A JMX Bean `org.squbs.unicomplex:type=ActorMonitor` exposes the configuration of Actor Monitor. The JMX Bean is read-only.
+一个JMX Bean `org.squbs.unicomplex:type=ActorMonitor` 暴露了Actor监控的配置。JMX Bean是只读的。
 
 ```
 trait ActorMonitorConfigMXBean {
-  def getCount : Int				//Count of JMX bean has been created 
-  def getMaxCount: Int				//Maximum JMX bean can be created
-  def getMaxChildrenDisplay: Int		//Per each actor, maximum children can be exposed 
+  def getCount : Int				//已经创建了的JMX bean的数目
+  def getMaxCount: Int				//可以创建JMX bean的最大的数目
+  def getMaxChildrenDisplay: Int		//每一个actor，可以暴露的子actor的最大数目
 }
 ```
- 
-

@@ -1,45 +1,47 @@
-# The Orchestration DSL
+# 编排DSL
 
-Orchestration is one of the major use cases for services, whether you try to orchestrate multiple service calls with as much concurrency, and therefore as good a response time, as possible, or you try to do multiple business operations, data writes, data reads, service calls, etc. dependent on each others, etc. The ability to concisely describe your business logic is essential to making the service easy to understand and maintain. The orchestration DSL - part of squbs-pattern - will make asynchronous code easy to write, read, and reason about.
+编排是服务的主要用例之一，你是否尝试以尽可能多的并发性编排多个服务调用，因此可以获得尽可能好的响应时间，或者你尝试进行多个业务操作，数据写入，数据读取，服务调用等，依赖于彼此等等。
+简洁地描述业务逻辑的能力对于使服务易于理解和维护非常重要。编排DSL - `squbs-pattern`的一部分 - 将使异步代码易于编写、阅读和推理。
 
-## Dependencies
+## 依赖
 
-The Orchestration DSL is part of `squbs-pattern`. To use the Orchestration DSL, please add the following dependencies:
+编排DSL是`squbs-pattern`的一部分。要使用编排DSL，请添加如下依赖：
 
 ```scala
 "org.squbs" %% "squbs-pattern" % squbsVersion,
 "com.typesafe.akka" %% "akka-contrib" % akkaVersion
 ```
 
-## Getting Started
-Lets get started with a simple, but complete example of orchestration. This orchestrator composes 3 interrelated asynchronous tasks:
+## 开始
 
-1. Loading the viewing user requesting this orchestration.
-2. Loading the item. Details may depend on the viewing user.
-3. Build an item view based on the user and item data.
+让我们从一个简单但完整的编排示例开始。这个编排由3个相互关联的异步任务组成：
 
-Lets dive into the flow and detail.
+1. 加载请求此编排的查看用户。
+2. 加载条目。详细信息依赖于查看的用户。
+3. 生成条目视图，基于用户和条目数据。
+
+让我们深入到流和细节。
 
 #### Scala
 
 ```scala
-    // 1. Define the orchestrator actor.
+    // 1. 定义编排actor.
 class MyOrchestrator extends Actor with Orchestrator {
 
-    // 2. Provide the initial expectOnce block that will receive the request message.
+    // 2. 提供将接收请求消息的初始expectOnce块.
   expectOnce {
     case r: MyOrchestrationRequest => orchestrate(sender(), r)
   }
   
-    // 3. Define orchestrate - the orchestration function.
+    // 3. 定义编排 - orchestration函数.
   def orchestrate(requester: ActorRef, request: MyOrchestrationRequest) {
     
-    // 4. Compose the orchestration flow using pipes (>>) as needed by the business logic.
+    // 4. 根据业务逻辑的需要，使用管道(>>)组合编排流.
     val userF = loadViewingUser
     val itemF = userF >> loadItem(request.itemId)
     val itemViewF = (userF, itemF) >> buildItemView
     
-    // 5. Conclude and send back the result of the orchestration.    
+    // 5. 结束并发回编排的结果.   
     for {
       user <- userF
       item <- itemF
@@ -49,11 +51,11 @@ class MyOrchestrator extends Actor with Orchestrator {
       context.stop(self)
     }
     
-    // 6. Make sure to stop the orchestrator actor by calling
+    // 6. 确保停止编排actor, 通过调用
     //    context.stop(self).
   }
   
-    // 7. Implement the orchestration functions as in the following patterns.
+    // 7. 按照以下模式实现编排功能.
   def loadItem(itemId: String)(seller: User): OFuture[Option[Item]] = {
     val itemPromise = OPromise[Option[Item]]
   
@@ -80,7 +82,7 @@ class MyOrchestrator extends Actor with Orchestrator {
 ```
 
 #### Java
-Due to language limitations in Java, the same implementation looks quite a bit more verbose:
+由于Java中的语言限制，相同的实现看起来相当冗长：
 
 ```java
     // 1. Define the orchestrator actor.
@@ -143,21 +145,21 @@ public class MyOrchestrator extends AbstractOrchestrator {
 }
 ```
 
-You may stop here and come back reading the rest later for a deep dive. Feel free to go further and satisfy your curious minds, though.
+你可以在这里停下来，稍后再回来阅读剩下的内容，以便深入了解。尽管如此，你仍然可以走得更远，满足你的好奇心。
 
-## Dependencies
+## 依赖
 
-Add the following dependency to your build.sbt or scala build file:
+添加如下依赖到你的`build.sbt`或scala构建文件：
 
 ```
 "org.squbs" %% "squbs-pattern" % squbsVersion
 ```
 
-## Core Concepts
+## 核心概念
 
-### Orchestrator
+### 编排
 
-`Orchestrator` is a trait extended by actors to support the orchestration functionality. It is technically a child trait of the [Aggregator](http://doc.akka.io/docs/akka/snapshot/contrib/aggregator.html) and provides all its functionality. In addition, it provides functionality and syntax allowing effective orchestration composition - plus utilities often needed in the creation of orchestration functions discussed in detail below. To use the orchestrator, an actor would simply extend the `Orchestrator` trait.
+`Orchestrator`是一个由actor继承用于支持编排功能的特质。从技术上讲，它是[Aggregator](http://doc.akka.io/docs/akka/snapshot/contrib/aggregator.html)的子特质，并提供其所有功能。此外，它还提供了功能和语法，允许有效的编排组合，以及在下面详细讨论的创建编排功能时经常需要的实用工具。要使用编排，actor可以简单地继承`Orchestrator`特质。
 
 ```scala
 import org.squbs.pattern.orchestration.Orchestrator
@@ -167,7 +169,7 @@ class MyOrchestrator extends Actor with Orchestrator {
 }
 ```
 
-The `AbstractOrchestrator` is the Java superclass for Java users. It composes Actor and Orchestrator under the cover as Java does not support trait mix-ins. So the Java orchestrator will be written out as follows:
+`AbstractOrchestrator`是Java超类，面向Java用户。由于Java不支持特质混入，所以它在幕后组合了Actor和编排。因此，Java编制将如下所示:
 
 ```java
 import org.squbs.pattern.orchestration.japi.AbstractOrchestrator;
@@ -177,13 +179,13 @@ public class MyOrchestrator extends AbstractOrchestrator {
 }
 ```
 
-Similar to Aggregator, an orchestrator generally does not declare the Akka actor receive block but allows the expect/expectOnce/unexpect blocks to define what responses are expected at any point. These expect blocks are generally used from inside orchestration functions.
+与`Aggregator`类似，编排通常不声明Akka actor接收块，但允许`expect/expectOnce/unexpect`块来定义在任何点上预期的响应。这些预期代码块通常在`orchestration`函数内部使用。
 
-### Scala: Orchestration Future and Promise
+### Scala: 编排的Future和Promise
 
-The orchestration promise and future is very similar to [`scala.concurrent.Future`](http://www.scala-lang.org/api/2.11.4/index.html#scala.concurrent.Future) and [`scala.concurrent.Promise`](http://www.scala-lang.org/api/2.11.4/index.html#scala.concurrent.Promise$) described [here](http://docs.scala-lang.org/overviews/core/futures.html) with only a name change to `OFuture` and `OPromise`, signifying them to be used with the Orchestrator, inside an actor. The orchestration versions differentiate themselves from the concurrent versions of the artifacts by having no concurrency behavior. They do not use an (implicit) `ExecutionContext` in their signatures, and for execution. They also lack a few functions explicitly executing a closure asynchronously. Used inside an actor, their callbacks will never be called outside the scope of an actor. This will eliminate the danger of concurrently modifying actor state from a different thread due to callbacks. In addition, they include performance optimizations assuming they will always be used inside an actor.
+编排的`promise`和`future`与[这里](http://docs.scala-lang.org/overviews/core/futures.html)描述的[`scala.concurrent.Future`](http://www.scala-lang.org/api/2.11.4/index.html#scala.concurrent.Future)和[`scala.concurrent.Promise`](http://www.scala-lang.org/api/2.11.4/index.html#scala.concurrent.Promise$)非常相似，只是名字改成了`OFuture`和`OPromise`，标志着它们应当在actor里用于编排。编制版本与工件的并发版本的区别在于没有并发行为。它们在签名中不使用(隐式)`ExecutionContext`，也不用于执行。它们还缺少一些显式异步执行闭包的函数。在actor内部使用时，它们的回调将永远不会在actor范围之外调用。这将消除由于回调而从不同线程同时修改Actor状态的危险。此外，它们还包括性能优化，假设它们总是在Actor内部使用。
 
-**Note:** DO NOT pass an `OFuture` outside an actor. Implicit conversions are provided to convert between `scala.concurrent.Future` and `OFuture`.
+**注意:** 不要传递一个`OFuture`到actor外面。提供了隐式转换用于转换`scala.concurrent.Future`和`OFuture`。
 
 ```scala
 import org.squbs.pattern.orchestration.{OFuture, OPromise} 
@@ -191,23 +193,25 @@ import org.squbs.pattern.orchestration.{OFuture, OPromise}
 
 ### Java: `CompletableFuture`
 
-The java CompletableFuture with its **synchronous** callbacks are used as placeholders for values to be satisfied during the orchestration. The synchronous callbacks ensures the processing of the future to happen on the thread it is completed. In the orchestration model, it would be the thread the orchestrator actor is scheduled for receiving and processing the message. This ensures there is no concurrent close-over of the actor state. All callbacks are processed in the scope of the actor.
+Java的`CompletableFuture`及其**同步**回调被用作值的占位符，以便在编排过程中得到满足。同步回调确保发生在它的线程上的future的处理已经完成。在编排模型中，它将会是编排actor被安排接收和处理消息的线程。这确保了没有并发地掩盖actor的状态。所有回调都在actor的范围内处理。
 
 ```java
 import java.util.concurrent.CompletableFuture;
 ```
 
-### Asynchronous Orchestration Functions
+### 异步的编排函数
 
-Orchestration functions are the functions called by the orchestration flow to execute single orchestration tasks, such as making a service or database call. An orchestration function must comply to the following guideline:
+编排函数是一个被编排流调用，去执行单一编排任务的函数，例如进行服务或数据库调用。一个编排函数必须符合以下准则：
 
-1. It must take non Future arguments as input. Based on current limitations in Scala, the number of arguments can be up to 22. The Java-style orchestration does not expose this limitation. In all cases, such functions should not have that many parameters.
+1. 它必须以非Future参数作为输入。根据Scala的当前限制，参数的数目最多可达22。在所有情况下, 这些函数不应该有那么多参数。java风格的编排没有暴露这个限制。在所有情况下，这些函数不应该有那么多参数。
 
-2. Scala functions may be [curried](http://docs.scala-lang.org/tutorials/tour/currying.html) to separate direct input from piped (future) input. The piped input must be the last set of arguments in a curried function. 
-3. It must cause asynchronous execution. The asynchronous execution is generally achieved by sending a message to be processed by a different actor.
-4. Scala implementations must return an OFuture (orchestration future). Java implementations must return a CompletableFuture.
+2. Scala函数可能[柯里化](http://docs.scala-lang.org/tutorials/tour/currying.html)，将直接输入与管道(future)输入分隔开。管道输入必须是在柯里化函数中最后一组参数。
 
-Lets look at a few examples of orchestration functions:
+3. 它必须导致异步执行。异步执行通常是通过发送一条由不同的actor处理的消息来完成的。
+
+4. Scala实现必须返回一个`OFuture`(编排future)。Java实现必须返回一个`CompletableFuture`。
+
+让我们来看看几个编排功能的例子:
 
 #### Scala
 
@@ -226,7 +230,7 @@ def loadItem(itemId: String)(seller: User): OFuture[Option[Item]] = {
 }
 ```
 
-In this example, the function is curried. The `itemId` argument is delivered synchronously and the seller is delivered asynchronously.
+这个例子，函数是柯里化的。`itemId`参数是同步传递的，而`seller`是异步传递的。
 
 #### Java
 
@@ -246,9 +250,9 @@ private CompletableFuture<Optional<Item>> loadItem(User seller, String itemId) {
 }
 ```
 
-We start the function with creating an `OPromise` (Scala) or `CompletableFuture` (Java) to hold the eventual value. Then we make an ItemRequest by sending it to another actor. This actor will now asynchronously obtain the item. Once we have sent the request, we register a callback with expectOnce. The code inside the expectOnce is a `Receive` that will execute based on the ItemActor sending the response back. In all cases, it will `success` the promise or `complete` the CompletableFuture. At the end, we send out the future. The reason for not returning a promise is the fact it is mutable. We do not want to return a mutable object out of the function. Calling `future` on it will provide an immutable view of the `OPromise`, which is the `OFuture`. Unfortunately, this cannot apply to Java.
+我们首先创建一个`OPromise`(Scala)或`CompletableFuture` (Java)来保存最终的值。然后，我创建一个`ItemRequest`，并发送给另外一个actor。此actor现在将异步获取`item`。一旦我们发送了请求，我们就用`expectOnce`注册一个回调。`expectOnce`里面的代码是一个`Receive`，它将根据`ItemActor`发回的响应执行。在任何情况下，它将让`promise`变成`success`或让`CompletableFuture`变成`complete`。最后，我们发出`future`。不返回一个`promise`的原因是它是可变的。我们不想从函数中返回一个可变的对象。在其上调用`future`将提供`OPromise`的不可变视图，即`OFuture`。不幸的是，这不适用于Java。
 
-The example below is logically the same as the first example, just using ask instead of tell:
+下面的示例在逻辑上与第一个示例相同，只是使用`ask`而不是`tell`:
 
 #### Scala
 
@@ -262,7 +266,7 @@ private def loadItem(itemId: String)(seller: User): OFuture[Option[Item]] = {
 }
 ```
 
-In this case, the ask `?` operation returns a [`scala.concurrent.Future`](http://www.scala-lang.org/api/2.11.4/index.html#scala.concurrent.Future). The Orchestrator trait provides implicit conversions between scala.concurrent.Future and OFuture so the result of the ask `?` can be returned from this function declaring an OFuture as a return type without explicitly calling a conversion.
+此例中，ask `?` 操作返回了一个[`scala.concurrent.Future`](http://www.scala-lang.org/api/2.11.4/index.html#scala.concurrent.Future)。`Orchestrator`特质提供了`scala.concurrent.Future`和`OFuture`的隐式转换，所以ask `?`的结果转换为这个函数声明的返回类型`OFuture` 且无需显示调用转换。
 
 #### Java
 
@@ -276,26 +280,26 @@ private CompletableFuture<Optional<Item>> loadItem(User seller, String itemId) {
 }
 ```
 
-The `AbstractOrchestrator` for provides convenience functions for `ask `that allows filling the result straight into a `CompletableFuture` using the `thenComplete` operation.
+`AbstractOrchestrator`为`ask`提供了方便的函数，允许使用`thenComplete`操作将结果直接填充到`CompletableFuture`中。
 
-While `ask` or `?` may seem to require writing less code, it is both less performant and less flexible as expect/expectOnce. The logic in the expect block could as well be used for further transformations of the result. The same can be achieved by using callbacks on the future returned from ask. The performance, however, cannot be easily compensated for, for the following reasons:
+这个时候用`ask`或`?`，似乎需要编写更少的代码，但它既不性能，也不像`expect/expectOnce`那样灵活 。`expect`块中的逻辑也可用于结果的进一步转换。同样可以通过`ask`返回的future使用回调来实。但是，由于以下原因，无法轻松地补偿性能：
 
-1. Ask will create a new actor as a receiver of the response.
-2. The conversion from [`scala.concurrent.Future`](http://www.scala-lang.org/api/2.11.4/index.html#scala.concurrent.Future) to `OFuture` as well as the `fill` operation for Java API will need a message to be piped back to the orchestrator, thus adding a message hop adding both latency and CPU.
+1. Ask将创建一个新的actor作为响应接收者。
+2. 从[`scala.concurrent.Future`](http://www.scala-lang.org/api/2.11.4/index.html#scala.concurrent.Future)到`OFuture`的转换以及Java API的`fill`操作需要将消息发送回`orchestrator`，从而添加一个消息跳转，同时增加了延迟和CPU。
 
-Tests have shown sligtly higher latency as well as CPU utilizations when using ask as opposed to expect/expectOnce.
+测试显示，当使用`ask`，而不是`expect/expectOnce`时，有更高的延迟和CPU利用率。
 
-### Composition
+### 组合
 
 #### Scala
 
-The pipe, or `>>` symbol takes one or more orchestration future `OFuture` and makes its outcome as the input to the orchestration function. The actual orchestration function invocation will happen asynchronously, when all the `OFuture`s representing the input to the function are resolved.
+管道，或者`>>`符号使用一个或多个编排future `OFuture`，并使其结果作为`orchestration`函数的输入。当所有代表函数输入的 `OFuture`都被解决时，`orchestration`函数调用将异步发生。
 
-The pipe is the main component of the Orchestration DSL allowing orchestration functions to be composed based on their input and output. The orchestration flow is determined implicitly by the orchestration declaration, or the declared flow of the orchestration through piping.
+管道是编排DSL的主要组件，它允许根据其输入和输出组合编排功能。编排流是由编排声明隐式确定的，或者通过管道来声明编排流。
 
-When multiple OFutures are piped to an orchestration function, the OFutures need to be comma-separated and enclosed in parentheses, constructing a tuple of OFutures as input. The number of elements in the tuple their OFuture types must match the function arguments and types, or the last set of arguments in case of a [curry](http://docs.scala-lang.org/tutorials/tour/currying.html), or the compilation will fail. Such errors are normally also cought by the IDE.
+当多个`OFuture`被输送到一个编排函数时，`OFuture`需要以逗号分隔并括在圆括号中，构造一个`OFuture`的元组作为输入。元组中的元素个数，它们的`OFuture`类型必须与函数参数和类型匹配，或者是在[柯里化](http://docs.scala-lang.org/tutorials/tour/currying.html)的情况下的最后一组参数，否则编译将失败。此类错误通常也由IDE捕获。
 
-The following example shows a simple orchestration declaration and flow using the loadItem orchestration function declared in previous sections, amongst others:
+下面的例子展示了一个简单的编排声明以及使用前面章节声明的`loadItem`函数的流：
 
 ```scala
 val userF = loadViewingUser
@@ -303,17 +307,17 @@ val itemF = userF >> loadItem(request.itemId)
 val itemViewF = (userF, itemF) >> buildItemView
 ```
 
-The flow above can be described as follows:
+上面的代码可以按如下描述：
 
-* First call loadViewingUser (with no input).
-* When the viewing user becomes available, use the viewing user as an input to call loadItem (in this case with an itemId available in prior). loadItem in this case follows the exact signature in the orchestration function declaration above.
-* When both user and item becomes available, call buildItemView.
+* 首先调用`loadViewingUser`(不带输入参数)。
+* 当查看用户变成可用时，使用查看用户作为调用`loadItem`的输入(在本例中，前面有个itemId可用)。本例中，`loadItem`遵循上面声明的编排函数的确切签名。
+* 当`user`和`item`可用时，调用`buildItemView`。
 
 #### Java
 
-The composition of multiple `CompletableFuture`s can be achieved by using composition function `CompletableFuture.thenCompose()`. Each `thenCompose` takes a lambda with the resolved future value as input. This will be called when the `CompletableFuture` is completed.
+使用`CompletableFuture.thenCompose()`函数可以完成多个`CompletableFuture`的组合。每个`thenCompose`接受一个`lambda`，使用解决的的`future`值作为输入。这将在`CompletableFuture`完成时调用。
 
-It is best to describe such composition using an example:
+最好是用一个例子来描述这样的组成：
 
 ```java
 static CompletableFuture<Optional<User>> userF = loadViewingUser();
@@ -326,23 +330,24 @@ static CompletableFuture<Optional<ItemView>> itemViewF =
         buildItemView(user, item)));
 ```
 
-The flow above can be described as follows:
+上述流可被描述如下:
 
-* First call loadViewingUser.
-* When the viewing user becomes available, use the viewing user as an input to call loadItem (in this case with an itemId available in prior).
-* When both user and item becomes available, call buildItemView.
+* 首先调用`loadViewingUser`。
+* 当查看用户变为可用时，使用查看用户作为调用`loadItem`的输入(在本例中，前面有个itemId可用)。
+* 当`user`和`item`可用时，调用`buildItemView`。
 
-## Orchestrator Instance Lifecycle
+## 编排实例生命周期
 
-Orchestrators are generally single-use actors. They receive the initial request and then multiple responses based on what requests the invoked orchestration functions send out.
+编排通常是一次性的actor。它们接收初始请求，然后根据调用的编排函数发出的请求进行多个响应。
 
-To allow an orchestrator to serve multiple orchestration requests, the orchestrator would have to combine the input and responses for each request and segregate them from different requests. This will largely complicate its development and will likely not end up in a clear orchestration reprsentation we see in these examples. Creating a new actor is cheap enough we could easily create a new orchestrator actors for each orchestration request.
+为了允许一个编排器服务多个编排请求，编排器必须结合每个请求的输入和响应，并根据不同的请求隔离它们。这将使其开发更加复杂化，并且最终结果很可能不是一个清晰的编排表述，我们在这些例子中可以看到的。创建一个新的actor是足够廉价的，我们能够容易地为每个编排请求创建一个新的编排actor。
 
-The last part of an orchestration callback should stop the actor. This is done in Scala by calling `context.stop(self)` or `context stop self` if the infix notation is preferred. Java implementations need to call `context().stop(self());`
+编制回调的最后一部分应该停止actor。在Scala中，通过调用`context.stop(self)`或者`context stop self` 如果建议使用中缀表示法。ava实现需要调用`context().stop(self());`。
 
-## Complete Orchestration Flow
 
-Here, we put all the above concepts together. Repeating the same example from Getting Started above with more complete explanations:
+## 完成编排流
+
+在这里，我们把上述所有的概念放在一起。用更完整的解释来重复上面的例子：
 
 #### Scala
 
@@ -486,11 +491,11 @@ public class MyOrchestrator extends AbstractOrchestrator {
 }
 ```
 
-## Re-use of Orchestration Functions
+## 编排函数的复用
 
 #### Scala
 
-Orchestration functions often rely on the facilities provided by the `Orchestrator` trait and cannot live stand-alone. However, in many cases, re-use of the orchestration functions across multiple orchestrators that orchestrate differently are desired. In such cases it is important to separate the orchestration functions into different trait(s) that will be mixed into each of the orchestrators. The trait has to have access to orchestration functionality and needs a self reference to the `Orchestrator`. The following shows a sample of such a trait:
+编排函数通常依赖于`Orchestrator`特质提供的工具，无法独立运行。但是，在许多情况下，需要在多个编排器中，以不同的编排方式重用编排函数。在这种情况下，重要的是将编排函数分成不同的特质，这些特质将被混入到每个编排器中。特质必须能够访问对编排功能，并且需要一个自我引用到`Orchestrator`。下面显示了这样一个特质的示例:
 
 ```scala
 trait OrchestrationFunctions { this: Actor with Orchestrator =>
@@ -501,9 +506,9 @@ trait OrchestrationFunctions { this: Actor with Orchestrator =>
 }
 ```
 
-The `this: Actor with Orchestrator` in the sample above is a typed self reference. It tells the Scala compiler that this trait can only be mixed into an `Actor` that is also an `Orchestrator` and therefore will have access to the facilities provided by both `Actor` and `Orchestrator`, using these facilities from the traits and classes it got mixed into.
+上面例子中的`this: Actor with Orchestrator`是一个类型化的自引用。它告诉Scala编译器，这个特质只能够混入到一个同样也是`Orchestrator`的`Actor`，因此可以访问`Actor`和`Orchestrator`提供的工具。
 
-To use the `OrchestrationFunctions` trait inside an orchestrator, one would just mix this trait into an orchestrator as follows:
+要在编排器中使用`OrchestrationFunctions`特质，你只需将这个特质混入到一个编排器中，如下所示：
 
 ```scala
 class MyOrchestrator extends Actor with Orchestrator with OrchestrationFunctions {
@@ -513,7 +518,7 @@ class MyOrchestrator extends Actor with Orchestrator with OrchestrationFunctions
 
 #### Java
 
-Java requires a single hierarchy and cannot support traits or multiple inheritance. Re-use is achieved by extending the AbstractOrchestrator, implementing the orchestration functions, and leaving the rest abstract - to be implemented by the concrete implementation of the orchestrator as illustrated in the followings:
+Java需要一个单独的层次结构，不能支持特征或多重继承。重用是通过扩展`AbstractOrchestrator`，实现编排功能，而剩下的抽象部分由编排的具体实现来实现的，如下所示：
 
 ```java
 abstract class MyAbstractOrchestrator extends AbstractOrchestrator {
@@ -536,13 +541,13 @@ abstract class MyAbstractOrchestrator extends AbstractOrchestrator {
 }
 ```
 
-The concrete implementation of the orchestrator then just extends from `MyAbstractOrchestrator` above and implements the different orchestration.
+编配器的具体实现只是从上面的`MyAbstractOrchestrator`扩展而来，并实现了不同的编配。
 
-## Ensuring Response Uniqueness
+## 确保响应的唯一性
 
-When using `expect` or `expectOnce`, we're limited by the pattern match capabilities of a single expect block which is limited in scope and cannot distinguish between matches across multiple expect blocks in multiple orchestration functions. There is no logical link that the received message is from the request message sent just before declaring the expect in the same orchestration function. For complicated orchestrations, we may run into issues of message confusion. The response is not associated with the right request and not processed correctly. There are a few strategies for dealing with this problem:
+当使用`expect`或`expectOnce`时，我们受到单个`expect`块的模式匹配功能的限制，它的作用域有限，无法区分多个编排函数中的多个`expect`块之间的匹配。在同一编排函数中声明`expect`之前，接收到的消息与发送的请求消息之间没有逻辑链接。对于复杂的编排，我们可能会遇到消息混淆的问题。响应没有与正确的请求关联，也没有正确处理。这是解决这个问题有几个策略：
 
-If the recipient of the initial message, and therefore the sender of the response message is unique, the match could include a reference to the message's sender as in the sample pattern match below.
+如果初始消息的接收者，和响应消息的发送者是唯一的，那么匹配可能包括对消息的发送者的引用，就像在下面的示例模式匹配中一样。
 
 #### Scala
 
@@ -580,7 +585,7 @@ private CompletableFuture<Optional<Item>> loadItem(User seller, String itemId) {
 }
 ```
 
-Alternatively, the `Orchestrator` trait provides a message id generator that is unique when combined with the actor instance. We can use this id generator to generate a unique message id. Actors that accept such messages will just need to return this message id as part of the response message. The sample below shows an orchestration function using the message id generator.
+或者，`Orchestrator`特质提供了一个消息`id`生成器，它在与actor实例组合时是唯一的。我们可以使用这个`id`生成器生成一个唯一的消息`id`。接受此类消息的Actor只需要将此消息`id`作为响应消息的一部分返回。下面的示例显示了使用消息`id`生成器的编排函数。
 
 #### Scala
 

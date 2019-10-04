@@ -1,20 +1,21 @@
-# Clustering squbs Services using ZooKeeper
+# 使用ZooKeeper集群化squbs服务
 
-## Overview
+## 概述
 
-squbs achieves clustering of services through the zkcluster module. zkcluster is an [Akka extension](http://doc.akka.io/docs/akka/snapshot/scala/extending-akka.html) which leverages [ZooKeeper](https://zookeeper.apache.org/) to manage akka cluster and partitions.
-It's similar to [Akka Cluster](http://doc.akka.io/docs/akka/snapshot/common/cluster.html) for the functions of leadership and membership management.
-However, it's richer as it provides partitioning support and eliminates the need of `entry-nodes`.
+squbs通过zkcluster模块实现集群化服务。zkcluster是一个[Akka扩展](http://doc.akka.io/docs/akka/snapshot/scala/extending-akka.html)，利用[ZooKeeper](https://zookeeper.apache.org/)管理akka集群和分区。
 
-## Configuration
+它类似于[Akka集群](http://doc.akka.io/docs/akka/snapshot/common/cluster.html)的领导和成员管理功能。但它更丰富，因为它提供了分区支持，并消除了对`entry-nodes`的需要。
 
-We'll need a `squbsconfig/zkcluster.conf` file under the runtime directory. It should provide the following properties:
 
-* connectionString: a string delimiting all zookeeper nodes of an ensemble with comma
-* namespace: a string that is a valid path of znode, which will be the parent of all znodes created thereafter
-* segments: number of partition segments to scale the number of partitions
+## 配置
 
-The following is an example of a `zkcluster.conf`  file content:
+我们需要一个在运行时目录下的`squbsconfig/zkcluster.conf`文件。它应该提供了如下属性：
+
+* connectionString: 一个用逗号分隔定义所有zookeeper节点
+* namespace: 一个字符串，它是znode的有效路径，它将是此后创建的所有znode的父节点
+* segments: 用于划分分区数量的分区段数
+
+下面是一个`zkcluster.conf`文件内容的例子：
 
 ```
 zkCluster {
@@ -24,9 +25,9 @@ zkCluster {
 }
 ```
 
-## User Guide
+## 用户指南
 
-Start by simply registering the extension as all normal akka extension. Then you access the `zkClusterActor` and use it as follows:
+首先简单的注册扩展，像所有正常的akka扩展一样。然后你可以访问并使用`zkClusterActor`，如下所示：
 
 ```scala
 val zkClusterActor = ZkCluster(system).zkClusterActor
@@ -81,27 +82,27 @@ zkCluster(system).zkClusterActor ! PoisonPill
 zkCluster(system).addShutdownListener(listener: () => Unit)
 ```
 
-## Dependencies
+## 依赖
 
-Add the following dependency to your build.sbt or scala build file:
+在你的`build.sbt`或Scala构建文件增加如下依赖：
 
 ```scala
 "org.squbs" %% "squbs-zkcluster" % squbsVersion
 ```
 
-## Design
+## 设计
 
-Read this if you're making changes of zkcluster
+如果您正在更改`zkcluster`，请阅读这些：
 
-* Membership is based on `zookeeper` ephemeral nodes, closed session would alter leader with `ZkMembershipChanged`.
-* Leadership is based on `curator` framework's `LeaderLatch`, new election will broadcast `ZkLeaderElected` to all nodes.
-* Partitions are calculated by the leader and write to the znode by `ZkPartitionsManager` in leader node.
-* Partitions modification is only done by the leader, who asks its `ZkPartitionsManager` to enforce the modification.
-* `ZkPartitionsManager` of follower nodes will watch the znode change in Zookeeper. Once the leader change the paritions after rebalancing, `ZkPartitionsManager` in follower nodes will get notified and update their memory snapshot of the partition information.
-* Whoever needs to be notified by the partitions change `ZkPartitionDiff` should send `ZkMonitorPartition` to the cluster actor getting registered.
+* 成员是基于`zookeeper`临时节点，关闭会话会通过`ZkMembershipChanged`改变领导者。
+* 领导是基于`curator`框架的`LeaderLatch`，新的选举将广播`ZkLeaderElected`给所有的节点。
+* 分区由领导者计算，并由领导节点中的`ZkPartitionsManager`写入znode。
+* 分区修改只能由领导者完成，它要求其`ZkPartitionsManager`来强制执行修改。
+* `ZkPartitionsManager`的追随者节点将观察Zookeeper中znode的变化。一旦领导者在重新平衡后改变了分区, 在追随者的节点中的`ZkPartitionsManager`将得到通知，并更新他们的分区信息的内存快照。
+* 无论谁需要得到分区改变`ZkPartitionDiff`的通知，应当发送`ZkMonitorPartition`到集群已经注册的actor。
 
-`ZkMembershipMonitor` is the actor type handling membership & leadership.
+`ZkMembershipMonitor` 是处理成员和领导者的actor类型。
 
-`ZkPartitionsManager` is the actor handling partitions management.
+`ZkPartitionsManager` 是处理分区管理的actor。
 
-`ZkClusterActor` is the interfacing actor users should be sending queries to.
+`ZkClusterActor` 是用户将要向其发送查询的接口actor。
