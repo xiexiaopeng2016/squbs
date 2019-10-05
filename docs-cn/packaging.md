@@ -1,43 +1,42 @@
-# Application Lifecycle Management
+# 应用程序生命周期管理
 
-This page describes a quick way to package, deploy, and start a squbs application. This guide uses Amazon EC2 as an example, showing how to run a squbs application in less than half an hour.
+此页描述了打包、部署和启动squbs应用程序的快速方法。本指南以亚马逊EC2为例，展示如何在不到半小时内运行squbs应用程序。
 
-## Packaging
+## 打包
 
-You need to install the following on your build instance
+您需要在构建实例上安装以下内容：
 
 - [git](https://git-scm.com/downloads)
 - [java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 - [sbt](http://www.scala-sbt.org/release/docs/Setup.html)
 
-Steps to build:
+构建的步骤：
 
-- Clone the source code from the git repo to the `<project>` directory
+- 从git仓库克隆源代码到`<project>`目录
 - cd `<project>`
-- Run the sbt build command, including "packArchive", such as: `sbt clean update test packArchive`
-- There are two archives created under `<project>/target`
+- 运行sbt构建命令，包括`packArchive`，例如：`sbt clean update test packArchive`
+- 在`<project>/target`下创建了两个存档
 - `<app>-<version>.tar.gz`
 - `<app>-<version>.zip`
 
-## Start
+## 启动
 
-You need to install the following on your running instance
+需要在运行的实例上安装以下内容
 
 - [java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 
-Steps to run:
+运行的步骤：
 
-- Copy either of the archives to the running instance
+- 将其中一个存档复制到正在运行的实例
 - `<app>-<version>.tar.gz`
 - `<app>-<version>.zip`
-- For example, explode the tarball `tar zxvf <app>-<version>.tar.gz` to the `<app>-<version>` directory
-- start the application `<app>-<version>/bin/run &`
-- You can check the admin `http://localhost:8080/adm` from that instance, or `http://<host>:8080/adm`
+- 例如，解压 `tar zxvf <app>-<version>.tar.gz` 到 `<app>-<version>` 目录
+- 启动应用 `<app>-<version>/bin/run &`
+- 你可以从这个实例检查管理 `http://localhost:8080/adm` 或 `http://<host>:8080/adm`
 
-## Shutdown
+## 关闭
 
-You can terminate the running process, for example, in linux `kill $(lsof -ti TCP:8080 | head -1)`
-Since the application registers a shutdown hook with the JVM, it will shutdown gracefully, unless it is abrupt.
+你可以终止正在运行的进程，例如，在linux中`kill $(lsof -ti TCP:8080 | head -1)`。由于应用程序注册了与JVM的关闭钩子，它将正常关闭，除非它已意外关闭。
 
 ## Amazon EC2
 
