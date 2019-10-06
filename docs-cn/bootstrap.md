@@ -1,8 +1,8 @@
 # Unicomplex & Cube 引导程序
 
-squbs自带一个默认的引导类`org.squbs.unicomplex.Bootstrap`。可以从IDE、命令行、sbt、甚至Maven启动。引导程序扫描类路径并在每个加载的jar资源中查找META-INF/squbs-meta.&lt;ext&gt;。如果squbs元数据可用, 则jar资源将被视为squbs cube或扩展, 并根据元数据声明进行初始化。然后, 引导程序首先初始化扩展、cube, 最后是服务处理程序, 不管它们在类路径中的顺序如何。
+squbs自带一个默认的引导类`org.squbs.unicomplex.Bootstrap`。可以从IDE、命令行、sbt、甚至Maven启动。引导程序扫描类路径并在每个加载的jar资源中查找`META-INF/squbs-meta.&lt;ext&gt;`。如果squbs元数据可用, 则jar资源将被视为squbs cube或扩展, 并根据元数据声明进行初始化。然后, 引导程序首先初始化扩展、cube, 最后是服务处理程序, 不管它们在类路径中的顺序如何。
 
-在正常情况下, 引导细节没有多少意义。然而，可能需要以不同的方式通过编程来引导squbs。这在需要定制配置和需要并行运行的测试用例中尤其常见。有关详细信息, 请参阅[Testing](testing.md)。引导squbs的语法如下：
+在正常情况下, 引导细节没有多少意义。然而，可能需要以不同的方式通过编程来引导squbs。这在需要定制配置和需要并行运行的测试用例中尤其常见。有关详细信息, 请参阅[测试](testing.md)。引导squbs的语法如下：
 
 **选项 1)** 使用自定义配置启动
 
@@ -27,27 +27,27 @@ UnicomplexBoot {(name, config) => ActorSystem(name, config)}
 
 让我们看一下每个组件。
 
-1. 创建UnicomplexBoot(boot)对象。通过将一个自定义配置(Config)或者actorSystemCreator闭包传入`UnicomplexBoot.apply()`来完成。
+1. 创建`UnicomplexBoot(boot)`对象。通过将一个自定义配置(Config)或者actorSystemCreator闭包传入`UnicomplexBoot.apply()`来完成。
 
 2. 上面示例中显示的配置对象为`customConfig`。这是从Typesafe配置库的解析函数中获得的配置对象。此配置对象尚未与`reference.conf`合并。它是可选的，替代其它`application.conf`配置中的定义。
 
-大多数用例都希望以这种方式创建ActorSystem, 因此不需要提供函数。createUsing可以完全避免。
+大多数用例都希望以这种方式创建ActorSystem, 因此不需要提供函数。`createUsing`可以完全避免。
 
 3. ActorSystem创建者传递一个函数或闭包来创建ActorSystem。实际创建发生在启动阶段(下面第7项)。默认的函数是`{(name, config) => ActorSystem(name, config)}`。传入的`name`是从配置文件中读取的ActorSystem名称。这个`config`是与任何提供的配置合并后加载的配置对象。大多数用例都希望以这种方式创建ActorSystem, 因此不需要提供函数。`createUsing` 完全可以避免。
 
-.scanResources("component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")。将扫描你的类路径以及另外所给资源。如果你不想扫描类路径，传入withClassPath = false或者在资源列表前的第一个参数仅传入false：.scanResources(withClassPath = false, "component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")。
+`.scanResources("component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")`，将扫描你的类路径以及另外所给资源。如果你不想扫描类路径，传入`withClassPath = false`或者在资源列表前的第一个参数仅传入`false`：`.scanResources(withClassPath = false, "component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")`。
 
 4. 使用`scanResources()`函数扫描组件查找cube、服务或者扩展。这是强制性的，否则将没有组件启动。如果没有传递参数, squbs引导程序将扫描其类加载器。测试用例可能希望只扫描某些组件。这通过可以传入另外的`squbs-meta.conf`文件位置(作为`scanResources`的一个变量参数)完成，比如`.scanResources("component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")`。将扫描你的类路径和另外所给的资源。如果你不想扫描类路径，传入`withClassPath = false`，或者`false`作为在资源列表前的第一个参数: `.scanResources(withClassPath = false, "component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")`。
 
 5. 使用`initExtension`函数初始化扩展。这将初始化扫描到的所有扩展。扩展的初始化将在ActorSystem创建前完成。对于多个Unicomplex的用例(即多个ActorSystem)，同一扩展不能多次初始化。一个扩展只能被一个测试用例使用。在某些测试用例中, 我们根本不希望初始化扩展, 也完全不会调用`initExtension`。
 
-6. 在退出时停止JVM。这是通过调用`stopJVMOnExit`函数来实现的。这个选项通常不应该用于测试用例。它用于squbs的引导程序，以确保squbs关闭并正确退出。它是由 squbs 的引导使用, 以确保 squbs 关闭和正确退出。
+6. 在退出时停止JVM。这是通过调用`stopJVMOnExit`函数来实现的。这个选项通常不应该用于测试用例。它用于squbs的引导程序，以确保squbs关闭并正确退出。它是由squbs的引导使用, 以确保squbs关闭和正确退出。
 
 7. 通过调用`start()`启动Unicomplex。这是一个强制性的步骤。没有它，就没有ActorSystem启动，也就没有Actor能够运行。start调用会阻塞, 直到系统完全启动和运行, 或者产生一个超时。当`start`出现超时的时候, 某些组件可能仍在初始化, 使系统处于`Initializing`状态。然而，在超时的时候，任何单个组件故障都会将系统状态转换为`Failed`。这将允许系统组件(如系统诊断程序)运行并完成。默认的启动超时设置为60秒。对于期望超时的测试, 可以设置更小的值，通过向`start()`传入要求的超时，例如`start(Timeout(5 seconds))`或更短的`start(5 seconds)`，使用从duration到timeout的隐式转换。
 
 # 配置解析
 
-squbs选择一个应用程序配置, 并将其与类路径下的聚合的application.conf和reference.conf合并。正在合并的应用程序配置从以下顺序选择。
+squbs选择一个应用程序配置, 并将其与类路径下的聚合的`application.conf`和`reference.conf`合并。正在合并的应用程序配置从以下顺序选择。
 
 1. 如果创建boot对象时提供了一个配置，这个配置将被选中。即上例中的`customConfig`字段。
 
@@ -80,9 +80,9 @@ squbs将应用划分到称为cubes的模块中。squbs中的模块旨在模块�
 
 ## Well Known Actors
 
-Well known actor 只是[Akka文档]所定义的(http://doc.akka.io/docs/akka/2.3.13/scala.html)[Akka actors](http://doc.akka.io/docs/akka/2.3.13/scala/actors.html)。它们由一个监管者actor启动，其为每一个cube创建。监管者有和cube相同的名称。因此，任何well known actor有一个路径/&lt;CubeName&gt;/&lt;ActorName&gt; 并可以用ActorSelection调用在/user/&lt;CubeName&gt;/&lt;ActorName&gt;下面查找。
+Well known actor 只是[Akka文档]所定义的(http://doc.akka.io/docs/akka/2.3.13/scala.html)[Akka actors](http://doc.akka.io/docs/akka/2.3.13/scala/actors.html)。它们由一个监管者actor启动，其为每一个cube创建。监管者有和cube相同的名称。因此，任何well known actor有一个路径`/&lt;CubeName&gt;/&lt;ActorName&gt;`并可以用ActorSelection调用在`/user/&lt;CubeName&gt;/&lt;ActorName&gt;`下面查找。
 
-with-router = true。对于well known actor路由器、调度器和邮件按照Akka文档配置在reference.conf 或application.conf 。
+`with-router = true`。对于well known actor路由器、调度器和邮件按照Akka文档配置在`reference.conf`或`application.conf`。
 
 一个well known actor可以作为一个单独的actor或者一个with路由器启动。为了将一个well known actor声明为一个路由器，增加:
     with-router = true
