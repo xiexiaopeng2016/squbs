@@ -82,11 +82,11 @@ squbs将应用划分到称为cubes的模块中。squbs中的模块旨在模块�
 
 Well-known actor 只是[Akka文档](http://doc.akka.io/docs/akka/2.3.13/scala.html)所定义的[Akka actors](http://doc.akka.io/docs/akka/2.3.13/scala/actors.html)。它们由一个监管者actor启动，其为每一个cube创建。监管者有和cube相同的名称。因此，任何well known actor有一个路径`/&lt;CubeName&gt;/&lt;ActorName&gt;`并可以用`ActorSelection`调用在`/user/&lt;CubeName&gt;/&lt;ActorName&gt;`下面查找。
 
-`with-router = true`。对于well known actor路由器、调度器和邮件按照Akka文档配置在`reference.conf`或`application.conf`。
+`with-router = true`。对于well-known actor路由器、调度器和邮件按照Akka文档配置在`reference.conf`或`application.conf`。
 
-一个well known actor可以作为一个单独的actor或者一个with路由器启动。为了将一个well known actor声明为一个路由器，增加:
+一个well-known actor可以作为一个单独的actor或者一个with路由器启动。为了将一个well-known actor声明为一个路由器，增加:
     with-router = true
-到actor声明中。对well known actor的路由器, 调度器和邮箱的配置在`reference.conf`或`application.conf`中完成，根据Akka文档。
+到actor声明中。对well-known actor的路由器, 调度器和邮箱的配置在`reference.conf`或`application.conf`中完成，根据Akka文档。
 
 下面是一个简单的cube声明`META-INF/squbs-meta.conf`，声明了一个well known actor：
 
