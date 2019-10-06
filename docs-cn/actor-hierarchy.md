@@ -9,11 +9,11 @@ squbs设置上面图片中显示的actor和组件层次结构, 以支持一个�
 
 * **Unicomplex** - 这是核心的单例actor，用来管理squbs系统。它注册所有的cube和web服务actor间的通信，以及cube监管者(用于管理系统生命周期)。它也负责启动web服务和服务注册actor。应用或者系统组件能够通过调用`Unicomplex()`访问`Unicomplex`的`ActorRef`。
 
-* **Listeners** - 侦听器创建`Flow`, 其用于处理传入HTTP请求, 并将它们绑定到配置的端口。它们携带在`reference.conf`或`application.conf`中配置的监听器名称。默认情况下，默认监听器地址0.0.0.0(任意接口)上绑定端口8080，不使用https。然而，可以在`application.conf`中覆盖。额外的监听器可以分别在库或应用的`reference.conf`或`application.conf`中配置。
+* **Listeners** - 监听器创建`Flow`, 其用于处理传入HTTP请求, 并将它们绑定到配置的端口。它们携带在`reference.conf`或`application.conf`中配置的监听器名称。默认情况下，默认监听器地址0.0.0.0(任意接口)上绑定端口8080，不使用https。然而，可以在`application.conf`中覆盖。额外的监听器可以分别在库或应用的`reference.conf`或`application.conf`中配置。
 
 * **RouteDefinition/FlowDefinition** - `RouteDefinition`和`FlowDefinition`都是不同形式的服务定义。一个`RouteDefinition`为服务定义了`Route`, 而一个`FlowDefinition`定义了一个`Flow`。这两个是不同类型的请求处理器，处理传入的Http请求。`RouteDefinition`和`FlowDefinition`本身都不是actor, 而是一个继承了各自的特质的类。它们由各自的服务注册, 并由相应的actor招待。
 
-* **Route/Flow actors** - `org.squbs.unicomplex.RouteActor`或`org.squbs.unicomplex.FlowActor`类型的actor，由`CubeSupervisor`创建，用于招待每个相应的`RouteDefinition`或`FlowDefinition`。因此, 他们成为子actor，并被它们所属的`CubeSupervisor`监管。它们的请求处理程序被自动注册到它们绑定的所有侦听器上，从而允许将来自侦听器的请求派发到相应的请求处理程序。
+* **Route/Flow actors** - `org.squbs.unicomplex.RouteActor`或`org.squbs.unicomplex.FlowActor`类型的actor，由`CubeSupervisor`创建，用于招待每个相应的`RouteDefinition`或`FlowDefinition`。因此, 他们成为子actor，并被它们所属的`CubeSupervisor`监管。它们的请求处理程序被自动注册到它们绑定的所有监听器上，从而允许将来自监听器的请求派发到相应的请求处理程序。
 
 * **Request handler actors** - 与其在服务中使用`RouteDefinition`/`FlowDefinition`, 开发人员不如选择在低级别API上工作并为此注册一个请求处理actor。避开高级路由API 通常会占用较少的内存, 并允许处理流式请求, 但与路由DSL相比更难进行编码。
 
