@@ -1,44 +1,44 @@
-# Perpetual Stream
+# 永久流
 
-### Overview
+### 概述
 
-The `PerpetualStream` allows declaration of a stream that would start when the server starts and stop gracefully without dropping messages when the server stops. It is commonly used for message consumers from Kafka or JMS, but also used as a consolidation point for data from multiple streams received through HTTP requests.
+`PerpetualStream`允许声明一个流，该流在服务器启动时启动，并在服务器停止时优雅地停止，而不会丢失消息。它通常用于来自Kafka或JMS的消息消费者，但也用作通过HTTP请求接收的多个流的数据的整合点。
 
-`PerpetualStream` can be customized in various ways to fit your streams' needs. Those are discussed in the sections listed below:
+`PerpetualStream`可以通过各种方式进行自定义以满足您的流的需求。在下面列出的部分中讨论了这些内容：
 
-* [Basic Use](#basic-use)
-* [Override Lifecycle State to run the stream](#override-lifecycle-state-to-run-the-stream)
-* [Shutdown Overrides](#shutdown-overrides)
-* [Kill Switch Overrides](#kill-switch-overrides)
-* [Receiving and forwarding a message to the stream](#receiving-and-forwarding-a-message-to-the-stream)
-* [Handling Stream Errors](#handling-stream-errors)
-* [Connecting a Perpetual Stream with an HTTP Flow](#connecting-a-perpetual-stream-with-an-http-flow)
+* [基本用途](#basic-use)
+* [覆盖生命周期状态以运行流](#override-lifecycle-state-to-run-the-stream)
+* [Shutdown重写](#shutdown-overrides)
+* [Kill开关重写](#kill-switch-overrides)
+* [接收并转发消息到流 Receiving](#receiving-and-forwarding-a-message-to-the-stream)
+* [处理流错误](#handling-stream-errors)
+* [连接永久流与HTTP流](#connecting-a-perpetual-stream-with-an-http-flow)
 
-### Dependency
+### 依赖
 
-`PerpetualStream` is part of core squbs. In general, you do not need to add an extra dependency. The classes are part of the following dependency:
+`PerpetualStream`是squbs内核的一部分。通常，您不需要添加额外的依赖项。这些类是以下依赖项的一部分：
 
 ```scala
 "org.squbs" %% "squbs-unicomplex" % squbsVersion
 ```
 
-### Usage
+### 用法
 
-The `PerpetualStream` gets exposed as the `PerpetualStream` trait for Scala and `AbstractPerpertualStream` abstract class for Java. For brevity, we'll refer to both as `PerpetualStream`.
+这些`PerpetualStream`被暴露为`PerpetualStream`特质(Scala)和`AbstractPerpertualStream`的抽象类(Java)。为简便起见，我们将两者都称为`PerpetualStream`。
 
-#### Basic Use
+#### 基本用途
 
 ##### Scala
 
-Streams making use of `PerpetualStream` will want to materialize to certain known types, allowing the hooks in `PerpetualStream` to work seamlessly with minimal amount of custom overrides. The options are:
+流利用`PerpetualStream`将希望具体化为某些已知类型，从而使`PerpetualStream`中的钩子能够无缝工作，以最小的自定义重写。选项包括：
 
-* Materialize to a `Future[_]`, meaning a future of any type. In this case the shared `killSwitch` from `PerpetualStream` should be embedded or `shutdown()` would need to be overridden.
-* Materialize to a `(KillSwitch, Future[_])` tuple. The `KillSwitch` will be used for initiating the shutdown of the stream.
-* Materialize to a `List` or any `Product` (`List`s, `Tuple`s are all subtypes of `Product`) where the first element is a `KillSwitch` and the last element is a `Future`.
+* 具体化为一个`Future[_]`，意味着一个任何类型的`future`。在这种情况下，来自`PerpetualStream`的共享`killSwitch`应该被嵌入或`shutdown()`将应该被重写。
+* 具体化为一个`(KillSwitch, Future[_])`元组。`KillSwitch`将用于启动流的关闭。
+* 具体化为一个`List`或任何`Product`(`List`，`Tuple`都是`Product`的子类型)其中第一个元素是一个`KillSwitch`，最后一个元素是一个`Future`。
 
-Streams with different materialized values can still be used but `shutdown()` needs to be overridden.
+仍然可以使用具有不同物化值的流，但是`shutdown()`需要被重写。
 
-Common examples for well behaved streams can be seen below:
+表现良好的流的常见例子如下：
 
 ```scala
 class WellBehavedStream extends PerpetualStream[Future[Done]] {
@@ -61,7 +61,7 @@ class WellBehavedStream extends PerpetualStream[Future[Done]] {
 }
 ```
 
-Alternatively, the following code shows another conformant `PerpetualStream` materializing its first element as `KillSwitch`:
+另外，以下代码显示了另一个符合`PerpetualStream`物化，其第一个元素为`KillSwitch`：
 
 ```scala
 class WellBehavedStream2 extends PerpetualStream[(KillSwitch, Future[Done])] {
@@ -84,7 +84,7 @@ class WellBehavedStream2 extends PerpetualStream[(KillSwitch, Future[Done])] {
 }
 ```
 
-That's it. These streams are well behaved because they materialize to the sink's materialized value, which is a `Future[Done]` in the first example, or a `(KillSwitch, Future[Done])` in the second one.
+就是这样。这些流的行为良好，因为它们实现为接收器的物化值，在第一个示例中为一个`Future[Done]`，在第二个示例中为`(KillSwitch, Future[Done])`。
 
 ##### Java
 
@@ -156,9 +156,9 @@ public class WellBehavedStream2 extends
 
 That's it. These streams are well behaved because they materialize to the sink's materialized value, which is a `CompletionStage<Done>` in the first example, or a `Pair<KillSwitch, CompletionStage<Done>>` in the second one.
 
-#### Override Lifecycle State to run the stream
+#### 覆盖生命周期状态来运行流
 
-There may be scenarios where a stream need to be materialized at a different lifecycle than `active`. In such scenarios, override `streamRunLifecycleState`, e.g.,:
+可能会有这样的情况，一个流需要在一个不同于`active`的生命周期中被具体化。在这种情况下，请覆盖`streamRunLifecycleState`，例如：
 
 ##### Scala
 
@@ -175,8 +175,9 @@ public LifecycleState streamRunLifecycleState() {
 }
 ```
 
-#### Shutdown Overrides
-It is sometimes not possible to define a well behaved stream. For instance, the `Sink` may not materialize to a `Future` or `CompletionStage` or you need to do further cleanup at shutdown. For this reason, it is possible to override `shutdown` as in the following code:
+#### Shutdown重写
+
+有时无法定义行为良好的流。例如，`Sink`可能没有物化为`Future`或`CompletionStage`或者您需要在关闭时进行进一步清理。为此，可以重写`shutdown`，按以下代码：
 
 ##### Scala
 
@@ -205,19 +206,21 @@ public CompletionStage<Done> shutdown() {
 }
 ```
 
-`shutdown` needs to do the following:
+`shutdown`需要执行以下操作：
 
-1. Initiate the shutdown of the stream.
-2. Do any other cleanup.
-3. Return the future that completes when the stream has finished processing.
+1. 动流的关闭。
+2. 进行任何其他清理。
+3. 返回future，其将在流处理完毕后完成。
 
-Note: It is always advisable to call `super.shutdown`. There is no harm or other side-effect in making this call.
+注意：始终建议调用`super.shutdown`。这个调用没有任何伤害或其他副作用。
 
 ##### Alternate Shutdown Mechanisms
-The `source` may not materialize to `KillSwitch` and provide a better way to do a proper shutdown than using the `killSwitch`. Just use the shutdown mechanism of the `source` in such cases and override `shutdown` to initiate the shutdown of the source. The `killSwitch` remains unused.
 
-#### Kill Switch Overrides
-If the `killSwitch` needs to be shared across multiple streams, you can override `killSwitch` to reflect the shared instance.
+`source`可能不会物化为`KillSwitch`，并且提供了比使用`killSwitch`更好的关闭方式。在这种情况下，只需使用`source`的关闭机制并覆盖`shutdown`来启动源的关闭。`killSwitch`仍未使用。
+
+#### Kill开关重写
+
+如果`killSwitch`需要在多个流之间共享，则可以重写`killSwitch`以反映共享的实例。
 
 ##### Scala
 
@@ -234,8 +237,9 @@ public SharedKillSwitch killSwitch() {
 }
 ```
 
-#### Receiving and forwarding a message to the stream
-Some streams take input from actor messages. While it is possible for some stream configurations to materialize to the `ActorRef` of the source, it is difficult to address this actor. Since `PerpetualStream` itself is an actor, it can have a well known address/path and forward to message to the stream source. To do so, we need to override the `receive` or `createReceive()` as follows:
+#### 接收和转发消息到流
+
+有些流从actor消息获取输入。虽然某些流配置可以物化到源的`ActorRef`，但很难定位(address)该actor。由于`PerpetualStream`本身是一个actor，因此它可以具有众所周知的地址/路径并转发消息到流的源。为此，我们需要重写`receive`或`createReceive()`，如下所示：
 
 ##### Scala
 
@@ -261,8 +265,9 @@ public Receive createReceive() {
 }
 ```
 
-#### Handling Stream Errors
-The `PerpetualStream` default behavior resumes on errors uncaught by the stream stages. The message causing the error is ignored. Override `decider` if a different behavior is desired.
+#### 处理流错误
+
+`PerpetualStream`默认行为恢复，在错误没有被流阶段未捕获时。导致错误的消息将被忽略。如果需要其他行为，则重写`decider`。
 
 ##### Scala
 
@@ -287,16 +292,13 @@ public akka.japi.function.Function<Throwable, Supervision.Directive> decider() {
 }
 ```
 
-`Restart` will restart the stage that has an error without shutting down the stream. Please see [Supervision Strategies](http://doc.akka.io/docs/akka/current/scala/stream/stream-error.html#Supervision_Strategies) for possible strategies.
+`Restart`将重新启动有错误的阶段，而不关闭流。请参[阅监督策略](http://doc.akka.io/docs/akka/current/scala/stream/stream-error.html#Supervision_Strategies)以了解可能的策略。
 
-#### Connecting a Perpetual Stream with an HTTP Flow
+#### 连接永久流与HTTP流
 
-Akka HTTP allows defining a `Flow[HttpRequest, HttpResponse, NotUsed]`, which gets materialized for each http connection.  There are scenarios where an app needs to connect the http flow to a long running stream that needs to be materialized only once (e.g., publishing to Kafka).  Akka HTTP enables end-to-end streaming in such scenarios with [`MergeHub`](http://doc.akka.io/docs/akka/current/scala/stream/stream-dynamic.html#dynamic-fan-in-and-fan-out-with-mergehub-broadcasthub-and-partitionhub).  squbs provides utilities to connect an http flow with a `PerpetualStream` that uses `MergeHub`.  
+Akka HTTP允许定义一个`Flow[HttpRequest, HttpResponse, NotUsed]`，每个http连接都会物化它。在某些情况下，应用程序需要将http流连接到一个长时间运行的流，该流只需要具体化一次(例如，发布到Kafka)。在这种情况下，Akka HTTP通过 [`MergeHub`](http://doc.akka.io/docs/akka/current/scala/stream/stream-dynamic.html#dynamic-fan-in-and-fan-out-with-mergehub-broadcasthub-and-partitionhub)启用端到端流。squbs提供了实用程序，使用`MergeHub`连接一个http流和一个`PerpetualStream`。
 
-
-Below are sample `PerpetualStream` implementations - two Scala and two Java equivalents, all using `MergeHub`.
-Type parameter `Sink[MyMessage, NotUsed]` describes the inlet of the `RunnableGraph` instance that will be used as a destination (`Sink`) by the http flow part in `HttpFlowWithMergeHub` further down.
-First a simplest outline of the logic:
+以下示例`PerpetualStream`实现 - 两个Scala和两个Java等价物，都使用`MergeHub`。类型参数`Sink[MyMessage, NotUsed]`描述了`RunnableGraph`实例的入口，其将被http流部(flow part)用作一个终点(`Sink`)，在下面的`HttpFlowWithMergeHub`中。首先是一个简单的逻辑框架：
 
 ##### Scala
 
@@ -337,14 +339,12 @@ public class PerpetualStreamWithMergeHub extends AbstractPerpetualStream<Sink<My
 }
 ```
 
-From outside prospective (by http flow) this class is seen as terminal `Sink[MyMessage, NotUsed]`, which means that
-`PerpetualStreamWithMergeHub` expects to receive `MyMessage` on its inlet and will not emit anything out, i.e. its outlet is plugged. 
-From the inside prospective `MergeHub` is the source of `MyMessage`s. Those messages are passed to `Sink.ignore`, which is nothing.
-`MergeHub.source[MyMessage]` produces runtime instance, with inlet of type `Sink[MyMessage, NotUsed]`, which conforms to `PerpetualStream[Sink[MyMessage, NotUsed]]` type parameter.
-The `.to(Sink.ignore)` completes or "closes" this `Shape` with a plugged outlet. End result is an instance of `RunnableGraph[Sink[MyMessage, NotUsed]]` 
+从外部预期的角度(通过http流)这个类被视为终端`Sink[MyMessage, NotUsed]`，这意味着`PerpetualStreamWithMergeHub`期望在其入口接收`MyMessage`，并不会放出任何东西，即它的出口被堵塞了。
+从内部来看，`MergeHub`是`MyMessage`的源。这些信息被传递给 `Sink.ignore`，它们什么都不是。
 
+`MergeHub.source[MyMessage]`生成运行时实例，具有类型为`Sink[MyMessage, NotUsed]`的入口，它们符合`PerpetualStream[Sink[MyMessage, NotUsed]]`类型参数。`.to(Sink.ignore)`使用一个堵塞的出口完成或"关闭"这个`Shape`。最终结果是一个`RunnableGraph[Sink[MyMessage, NotUsed]]`实例。
 
-A bit more involved example using GraphDSL:
+使用GraphDSL的更复杂的例子：
 
 ##### Scala
 
@@ -446,19 +446,13 @@ public class PerpetualStreamWithMergeHub extends AbstractPerpetualStream<Sink<My
 }
 ```
 
-Let's see how all parts are falling into a place:
-`streamGraph` is expected to return `RunnableGraph` with the same type parameter as described in `PerpetualStream[Sink[MyMessage, NotUsed]]`.
-Our `source` is a `MergeHub`, it is expected to receive a `MyMessage`, which makes its materialized (runtime) type a `Sink[MyMessage,NotUsed]`.
-Our graph is built starting with our `source`, by passing it as a parameter to `GraphDSL.create(s:Shape)` constructor. 
-The result is an instance of `RunnableGraph[Sink[MyMessage, NotUsed]]`, which is a `ClosedShape` with `Sink` inlet and plugged outlet.
+让我们看看所有的部分是如何落在一个地方：`streamGraph`期望返回`RunnableGraph`，其类型参数与`PerpetualStream[Sink[MyMessage, NotUsed]]`中描述的相同。我们的`source`是一个`MergeHub`，它期望接收一个`MyMessage`，这使得它的物化(运行时)类型为`Sink[MyMessage,NotUsed]`。我们的图形是从`source`开始构建的，通过将其作为参数传递给`GraphDSL.create(s:Shape)`构造函数。结果是一个`RunnableGraph[Sink[MyMessage, NotUsed]]`的实例，它是一个`ClosedShape`，带有`Sink`入口和被堵塞的出口。
 
-Potentially confusing part when looking at this example is mixing `Sink` and `source` names to refer to the same. It looks a bit strange in English.
-Let's use outside vs. inside prospective explanation again:
-From the outside prospective our component is seen as a `Sink[MyMessage, NotUsed]`. This is achieved by using `MergeHub`, which from the inside prospective is a source of the messages hence `val` name `source`.
-Correspondingly, in the event we need to emit something out, our `val sink` will be actually some shape with outlet of type `Source[MyMessage, NotUsed]`.
- 
- 
-Let's add the above `PerpetualStream` in `squbs-meta.conf`.  Please see [Well Known Actors](bootstrap.md#well-known-actors) for more details.
+查看此示例时，可能会混淆的部分是将`Sink`和`source`名称混合起来以引用相同的名称。它在英语中看起来有点奇怪。让我们再次使用外部和内部的预期解释：从外部预期来看，我们的组件被看作是一个`Sink[MyMessage, NotUsed]`。这是通过使用`MergeHub`完成的，从内部预期看，它是消息的一个来源，因此`val`将其命名为`source`。
+
+相应地，在我们需要发出一些东西的时候，我们的`val sink`实际上会是一个带有类型`Source[MyMessage, NotUsed]`输出的形状。
+
+让我们在`squbs-meta.conf`中添加上述`PerpetualStream`。有关更多详细信息，请参见[Well Known Actors](bootstrap.md#well-known-actors)。
 
 ```
 cube-name = org.squbs.stream.mycube
@@ -479,9 +473,7 @@ squbs-actors = [
 
 ##### Scala
 
-The HTTP `FlowDefinition` can be connected to the `PerpetualStream` as follows by extending `PerpetualStreamMatValue` and using `matValue` method.
-Type parameter for the `PerpetualStreamMatValue` describes the data type flowing between the HTTP flow and the `MergeHub`.
-(both versions of `PerpetualStreamWithMergeHub` above expect to receive `MyMessage`, i.e. both have inlet of a type `Sink[MyMessage, NotUsed]`).
+HTTP的`FlowDefinition`可以像下面这样连接到`PerpetualStream`，通过扩展`PerpetualStreamMatValue`和使用`matValue`方法。`PerpetualStreamMatValue`的类型参数描述了在HTTP流和`MergeHub`之间流动的数据类型。(上面`PerpetualStreamWithMergeHub`的所有版本都期望接收`MyMessage`，即都具有类型`Sink[MyMessage, NotUsed]`的入口)。
 
 ```scala
 class HttpFlowWithMergeHub extends FlowDefinition with PerpetualStreamMatValue[MyMessage] {
@@ -496,7 +488,7 @@ class HttpFlowWithMergeHub extends FlowDefinition with PerpetualStreamMatValue[M
 
 ##### Java
 
-The HTTP `FlowDefinition` can be connected to the `PerpetualStream` as follows by extending `FlowToPerpetualStream` instead of `FlowDefinition` directly. Note that `FlowToPerpetualStream` **is a** `FlowDefinition`. We use the `matValue` method as the sink to send HTTP messages to the `MergeHub` defined in the `PerpetualStream`.
+HTTP的`FlowDefinition`可以像下面这样连接到`PerpetualStream`，通过直接扩展`FlowToPerpetualStream`而不是`FlowDefinition`。请注意`FlowToPerpetualStream`**是一个**`FlowDefinition`。我们使用`matValue`方法作为接收，将HTTP消息发送到`PerpetualStream`中定义的`MergeHub`。
 
 ```java
 class HttpFlowWithMergeHub extends FlowToPerpetualStream {
@@ -514,9 +506,5 @@ class HttpFlowWithMergeHub extends FlowToPerpetualStream {
 }
 ```
 
-Let's see what's happening here:
-`matValue` method finds the `RunnableGraph` component registered under the `/user/mycube/perpetualStreamWithMergeHub`.
-This happens to be the bootstrapped instance of our `PerpetualStreamWithMergeHub`.
-`alsoTo` expects result of `matValue` to be a `Sink` for `MyMessage`.
-I.e. `Sink[MyMessage, NotUsed]`. And as we've seen above this is exactly what `PerpetualStreamWithMergeHub.streamGraph` will produce. 
-(Remembering our two prospectives: here `alsoTo` looks at `PerpetualStreamWithMergeHub` from the outside prospective and sees a `Sink[MyMessage, NotUsed]`.)
+让我们看看这里发生了什么：
+`matValue`方法查找`/user/mycube/perpetualStreamWithMergeHub`下注册的`RunnableGraph`组件。这恰好是我们的`PerpetualStreamWithMergeHub`的引导实例。`alsoTo`期望`matValue`的结果是`MyMessage`的`Sink`，即`Sink[MyMessage, NotUsed]`。正如我们在上面看到的，这正是`PerpetualStreamWithMergeHub.streamGraph`将产生的。(记住我们的两个展望：这里`alsoTo`从外部展望`PerpetualStreamWithMergeHub`，看到的是`Sink[MyMessage, NotUsed]`。)

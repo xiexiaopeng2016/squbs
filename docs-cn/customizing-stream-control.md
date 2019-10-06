@@ -1,19 +1,19 @@
-# Customizing Stream Control
+# 自定义流控制
 
-Akka Streams/Reactive stream needs to be integrated with the [Runtime Lifecycle](lifecycle.md) of the server. For this, an automated or semi-automated integration is provided through the [`PerpetualStream`](perpetualstream.md) infrastructure. If you need even more fine-grained control over stream, the following sections explain such facilities.
+Akka流/响应流需要与服务器的[运行时生命周期](lifecycle.md)集成。为此，通过[`PerpetualStream`](perpetualstream.md)基础结构提供了自动化或半自动化的集成。如果您需要对流进行更细粒度的控制，以下几节将介绍此类功能。
 
-### Dependency
+### 依赖
 
-In general, you do not need to add an extra dependency. The classes are part of the following dependency:
+通常，您不需要添加额外的依赖项。这些类是以下依赖项的一部分：
 
 ```scala
 "org.squbs" %% "squbs-unicomplex" % squbsVersion
 ```
 
 
-## Making A Lifecycle-Sensitive Source
+## 制作一个对生命周期敏感的源
 
-If you wish to have a source that is fully connected to the lifecycle events of squbs, you can wrap any source with `LifecycleManaged`.
+如果希望有一个与squb的生命周期事件完全相关的源，则可以使用`LifecycleManaged`来包装任何源。
 
 **Scala**
 
@@ -29,17 +29,17 @@ final Source inSource = <your-original-source>
 final Source aggregatedSource = new LifecycleManaged().source(inSource);
 ```
 
-The resulting source will be an aggregated source materialize to a `(T, ActorRef)` where `T` is the materialized type of `inSource` and `ActorRef` is the materialized type of the trigger actor which receives events from the Unicomplex, the squbs container.
+生成的源将是具体化为`(T, ActorRef)`的聚合源，其中`T`是`inSource`的具体化类型，并且`ActorRef`是触发的actor的具体化类型，其接收来自Unicomplex(squbs容器)的事件。
 
-The aggregated source does not emit from original source until lifecycle becomes `Active`, and stop emitting element and shuts down the stream after lifecycle state becomes `Stopping`.
+在生命周期变为生命周期之前，聚合源不会从原始源发出Active，并且在生命周期状态变为时停止发射元素并关闭流Stopping。
 
-## Custom Aggregated Triggered Source
-If you want your flow to enable/disable to custom events, you can integrate with a custom trigger source,
-element `true` will enable, `false` will disable.
+聚合的源不会从原始源发出，直到生命周期变得`Active`，并在生命周期状态变为`Stopping`后停止发出元素并关闭流。
 
-Note that `Trigger` takes an argument `eagerComplete` which defaults to `false` in Scala but has to be
-passed in Java. If `eagerComplete` is set to `false`, completion and/or termination of the trigger source actor
-will detach the trigger. If set to `true`, such termination will complete the stream.
+## 自定义 Aggregated Triggered Source
+
+如果您希望你的流可以启用/禁用自定义事件，则可以与自定义触发源集成，元素`true`将启用，`false`将禁用。
+
+请注意，`Trigger`接受一个参数`eagerComplete`，其默认为`false`，在Scala中，但必须在Java中传递。如果`eagerComplete`设置为`false`，则触发源的actor的完成和/或终止将分离触发器。如果设置为true，则此类终止将完成流。
 
 ##### Scala
 
@@ -70,8 +70,9 @@ final Source<?, ?> trigger = <your-custom-trigger-source>.collect(new PFBuilder<
 final Source aggregatedSource = new Trigger(false).source(inSource, trigger);
 ```
 
-## Custom Lifecycle Event(s) for Trigger
-If you want to respond to more lifecycle events beyond `Active` and `Stopping`, for example you want `Failed` to also stop the flow, you can modify the lifecylce event mapping.
+## 为触发器自定义生命周期事件
+
+如果您想响应更多的生命周期事件，而不仅仅是`Active`和`Stopping`，例如，您希望`Failed`时，还要停止流，则可以修改生命周期事件映射。
 
 ##### Scala
 

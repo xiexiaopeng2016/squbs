@@ -1,34 +1,34 @@
-# Timeout stage
+# 超时阶段
 
-### Overview
+### 概述
 
-Some stream use cases may require each message in a flow to be processed within a bounded time or to send a timeout failure message instead.  squbs introduces `Timeout` Akka Streams stage to add timeout functionality to streams.
+一些流用例可能需要在限定的时间内处理流中的每个消息，否则发送超时失败消息。squbs引入了`Timeout`Akka流阶段，为流添加超时功能。
 
-### Dependency
+### 依赖
 
-Add the following dependency to your `build.sbt` or scala build file:
+将以下依赖项添加到您的`build.sbt`或scala构建文件:
 
 ```
 "org.squbs" %% "squbs-ext" % squbsVersion
 ```
 
-### Usage
+### 用法
 
-The timeout functionality is provided as a `BidiFlow` that can be connected to a flow via the `join` operator.  The timeout `BidiFlow` sends a `Try` to downstream:
+超时功能以`BidiFlow`的形式提供，可以通过`join`操作符连接到一个流。超时`BidiFlow`发送一个`Try`到下游：
 
-   * If an output `msg` is provided by the wrapped flow within the timeout, then `Success(msg)` is passed down.
-   * Otherwise, a `Failure(FlowTimeoutException())` is pushed to downstream.  
+   * 如果输出`msg`是在包装的流的超时范围内提供的，则将`Success(msg)`往下传递。
+   * 否则，一个`Failure(FlowTimeoutException())`将推送到下游  
 
 
-If there is no downstream demand, then no timeout message will be pushed down.  Moreover, no timeout check will be done unless there is downstream demand.  Accordingly, based on the demand scenarios, some messages might be send as a `Success` even after the timeout duration.
+如果没有下游需求，则不会将超时消息下推。此外，除非有下游需求，否则不会进行超时检查。因此，根据需求场景，即使在超时时间之后，一些消息也可能作为`Success`发送。
 
-Timeout precision is at best 10ms to avoid unnecessary timer scheduling cycles.
+超时精度最好为10ms，以避免不必要的计时器调度周期。
 
-The timeout feature is supported for flows that guarantee message ordering as well as for the ones that do not guarantee message ordering.  For the flows that do not guarantee message ordering, a `context` needs to be carried by the wrapped flow to uniquely identify each element.  While the usage of the `BidiFlow` is same for both types of flows, the creation of the `BidiFlow` is done via two different APIs.    
+对于保证消息排序的流和不保证消息排序的流，都支持超时特性。对于不保证消息排序的流，包装的流需要携带一个`context`来惟一地标识每个元素。虽然`BidiFlow`的用法对于两种类型的流都是相同的但是`BidiFlow`的创建是通过两个不同的api完成的。
 
-#### Flows with message order guarantee
+#### 具有消息顺序保证的流
 
-`TimeoutOrdered` is used to create a timeout `BidiFlow` to wrap flows that do keep the order of messages.  Please note, with the message order guarantee, there can be a head-of-line blocking scenario, a slower element might cause subsequent elements to timeout.
+`TimeoutOrdered`用于创建一个超时`BidiFlow`来包装保持消息顺序的流。请注意，在消息顺序保证的情况下，可能会出现head-of-line阻塞的情况，一个较慢的元素可能会导致后续元素超时。
 
 ##### Scala
 
@@ -55,13 +55,14 @@ Source.from(Arrays.asList("a", "b", "c"))
     .runWith(Sink.seq(), mat);
 ```   
 
-#### Flows without message order guarantee
+#### 没有消息顺序保证的流
 
-`Timeout` is used to create a timeout `BidiFlow` to wrap flows that do not guarantee the order of messages.  To uniquely identify each element and its corresponding timing marks, a `context`, of any type defined by the application, needs to be carried around by the wrapped flow.  The requirement is that either the `Context` itself or a mapping from `Context` should be able to uniquely identify an element (see [Context to Unique Id Mapping](#context-to-unique-id-mapping) section for more details).
+`Timeout`用于创建一个超时`BidiFlow`来包装不保证消息顺序的流。要惟一地标识每个元素及其对应的定时标记，应用程序定义的任何类型的`context`都需要由封装的流携带。需求是`Context`本身或来自`Context`的映射应该能够唯一地标识一个元素(查看[用于惟一Id的映射的上下文](#context-to-unique-id-mapping)章节了解更多细节)。
 
 ##### Scala
 
-`Timeout[In, Out, Context](timeout: FiniteDuration)` is used to create an unordered timeout `BidiFlow`.  This `BidiFlow` can be joined with any flow that takes in a `(In, Context)` and outputs a `(Out, Context)`.
+`Timeout[In, Out, Context](timeout: FiniteDuration)`用于创建一个无序的超时`BidiFlow`。
+这个`BidiFlow`可以与任何接收一个`(In, Context)`并输出一个`(Out, Context)`的流连接。
 
 ```scala   
 val timeout = Timeout[String, String, UUID](1 second) 
@@ -77,7 +78,7 @@ Source("a" :: "b" :: "c" :: Nil)
 
 ##### Java
 
-The following API is used to create an unordered timeout `BidiFlow`:
+以下API用于创建无序超时`BidiFlow`：
 
 ```java
 public class Timeout {
@@ -90,7 +91,7 @@ public class Timeout {
 }
 ```
 
-This `BidiFlow` can be joined with any flow that takes in a `akka.japi.Pair<In, Context>` and outputs a `akka.japi.Pair<Out, Context>`.
+这个`BidiFlow`可以与任何接受一个`akka.japi.Pair<In, Context>`并输出一个`akka.japi.Pair<Out, Context>`的流连接。
 
 ```java
 final Duration duration = Duration.ofSeconds(1);
@@ -111,20 +112,17 @@ Source.from(Arrays.asList("a", "b", "c"))
         .runWith(Sink.seq(), mat);    
 ```
 
-##### Context to Unique Id Mapping
+##### 用于唯一ID映射的上下文
 
-`Context` itself might be used as a unique id.  However, in many scenarios, `Context` contains more than the unique id itself or the unique id might be retrieved as a mapping from the `Context`.  squbs allows different options to provide a unique id:
+`Context`本身可以用作唯一的id。但是，在许多场景中，`Context`包含的内容比惟一id本身更多，或者惟一id可能作为映射从`Context`检索。squbs允许不同的选项提供一个唯一的id：
 
-   * `Context` itself is a type that can be used as a unique id, e.g., `Int`, `Long`, `java.util.UUID`
-   * `Context` extends `UniqueId.Provider` and implements `def uniqueId`
-   * `Context` is wrapped with `UniqueId.Envelope`
-   * `Context` is mapped to a unique id by calling a function
+   * `Context` 它本身是一种可以用作唯一id的类型，例如，`Int`，`Long`，`java.util.UUID`
+   * `Context` 扩展`UniqueId.Provider`并实现`def uniqueId`
+   * `Context` 是用`UniqueId.Envelope`包装的
+   * `Context` 通过调用函数映射到唯一ID
 
 
-With the first three options, a unique id can be retrieved directly through the context.
-
-For the last option, `Timeout` allows a function to be passed in via `TimeoutSettings`:
-
+使用前三个选项，可以直接通过上下文检索唯一的id。对于最后一个选项，`Timeout`允许通过`TimeoutSettings`传入到一个函数中：
 
 ###### Scala
 
@@ -187,11 +185,11 @@ Source.from(Arrays.asList("a", "b", "c"))
         .runWith(Sink.seq(), mat);
 ```
 
-##### Clean up callback
+##### 清理回调
 
-The `Timeout` also provides a clean up callback function to be passed in via `TimeoutSettings`. This function will be called for emitted elements that were already considered timed out.
+`Timeout`还提供了一个清理回调函数，可以通过`TimeoutSettings`传入。对于已经被认为超时的已发出的元素，将调用此函数。
 
-An example use case for this functionality is when `Timeout` is used with Akka Http client. As described in [Implications of the streaming nature of Request/Response Entities](http://doc.akka.io/docs/akka-http/current/scala/http/implications-of-streaming-http-entity.html), all http responses must be consumed or discarded. By passing a clean up callback to discard the timed out requests when they complete we avoid clogging down the stream.
+一个示例，此功能的用例在Akka Http客户端使用`Timeout`时。如[请求/响应实体的流本质的影响](http://doc.akka.io/docs/akka-http/current/scala/http/implications-of-streaming-http-entity.html)所述，所有http响应必须消费或丢弃。通过传递一个清理回调以在超时请求完成时丢弃它们，我们可以避免阻塞流。
 
 ###### Scala
 ```scala

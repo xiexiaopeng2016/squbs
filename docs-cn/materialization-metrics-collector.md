@@ -1,31 +1,30 @@
-# Materialization Metrics Collector Stage
+# 物化指标收集器阶段
 
-### Overview
+### 概述
 
-`MaterializationMetricsCollector` is an Akka Streams `GraphStage` to collect materialization metrics for a stream:
+`MaterializationMetricsCollector`是一个Akka流`GraphStage`，用于收集流的物化指标：
 
-   * active materialization counts
-   * new materialization creation rates
-   * materialization termination rates (aggregation of successful termination and failures)
+   * 活动的物化数量
+   * 新的物化创建率
+   * 物化终止率(成功终止和失败的汇总)
 
+`MaterializationMetricsCollector`的一个突出用例是服务器端Akka HTTP，其中每个新连接都会导致流物化，因此每个连接终止都会导致相关流物化的终止。因此，`MaterializationMetricsCollector`是与[squbs HTTP(S) service](HTTP -services.md)开箱即用的集成，实现它发布活动连接、连接创建和连接终止指标。
 
-A prominent use case for the `MaterializationMetricsCollector` is with server-side Akka HTTP, where each new connection results in a stream materialization and therefore each connection termination results in the termination of the associated stream materialization. For this reason, the `MaterializationMetricsCollector` is out-of-the-box integrated with [squbs HTTP(S) service](http-services.md) implementations publishing active connection, connection creation, and connection termination metrics.
+### 依赖
 
-### Dependency
-
-Add the following dependency to your `build.sbt` or scala build file:
+将以下依赖项添加到您的`build.sbt`或scala构建文件:
 
 ```
 "org.squbs" %% "squbs-ext" % squbsVersion
 ```
 
-### Usage
+### 用法
 
-The usage is very similar to standard Akka Stream stages.  In below examples, you should see JMX beans with names that contain:
+其用法与标准的Akka流阶段非常相似。在下面的例子中，您会看到JMX bean的名称包含：
 
-   * `my-stream-active-count` with `Count` value 2 at the beginning, but will go down to 0 once the materializations terminate.
-   * `my-stream-creation-count` with `Count` value 2.
-   * `my-stream-termination-count` will shows up only after a stream terminates and will have `Count` value 2 ultimately.
+   * `my-stream-active-count` 开始时`Count`的值是2，一旦物化终止就会下降到0
+   * `my-stream-creation-count` 包含`Count`值为2。
+   * `my-stream-termination-count` 仅在流终止后才会显示，并且`Count`最终值为2。
 
 
 ##### Scala

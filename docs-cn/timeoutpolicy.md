@@ -1,24 +1,24 @@
-# Timeout Policy
+# 超时策略
 
-Timeouts are a key part of every asynchronous system and every distributed system. They are usually configured statically and hard to get right. squbs provides the Timeout Policy facility as part of the squbs-pattern package to help dynamically determine the correct timeout given a policy instead of static setting.  This dynamically determined timeout value from the policy can then be utilized for setting the timeouts.  Please note that timeout policy helps only in deriving timeout values and its usage itself will not cause the timeouts to occur.
+超时是每个异步系统和每个分布式系统的关键部分。它们通常是静态配置的，很难正确配置。squbs提供超时策略工具，作为squbs模式包的一部分，以帮助动态地确定给定策略的正确超时，而不是静态设置。然后可以使用策略中动态确定的超时值设置超时。请注意，超时策略仅帮助派生超时值，其使用本身不会导致超时。
 
-## Dependencies
+## 依赖
 
-Add the following dependency to your build.sbt or scala build file:
+将以下依赖项添加到您的`build.sbt`或scala构建文件:
 
 ```scala
 "org.squbs" %% "squbs-pattern" % squbsVersion
 ```
 
-## Quick Example
+## 简单的例子
 
-In a normal case of awaits as shown in the Scala code below...
+在正常等待情况下，在下面的Scala代码中所示...
 
 ```scala
 Await.ready(future, timeout.duration)
 ```
 
-You can change this code to an await block insude a closure as follows:
+你可以改变这段代码，`await`块包含在一个闭包内，如下:
 
 ```scala
 val policy = TimeoutPolicy(name = Some("mypolicy"), initial = 1 second)
@@ -29,27 +29,27 @@ val result = policy.execute(duration => {
 
 ## Scala API
 
-You can create the TimeoutPolicy by just passing a rule to it as follows:
+你可以创建`TimeoutPolicy`，只通过传递一个规则给它，如下：
 
-1. For fixed timeout you actually do not have to specify a rule. The fixedRule is the default.
+1. 对于固定超时，实际上不需要指定规则。fixedRule是默认设置。
 
    ```scala
    val policy = TimeoutPolicy(name = Some("MyFixedPolicy"), initial = 1 second, rule = fixedRule)
    ```
 
-2. Timeout based on standard deviation of response times (sigma). 
+2. 基于响应时间标准差的超时。
 
    ```scala
    val policy = TimeoutPolicy(name = Some("MySigmaPolicy"), initial = 1 second, rule = 3 sigma)
    ```
 
-3. Timeout based on percentiles of response times.
+3. 基于响应时间百分比的超时。
 
    ```scala
    val policy = TimeoutPolicy(name = Some("MyPctPolicy"), initial = 1 second, rule = 95 percentile)
    ```
 
-Then, you can use the policy as follows:
+然后，您可以使用以下策略：
 
 ```scala
 val result = policy.execute(duration => {
@@ -57,8 +57,7 @@ val result = policy.execute(duration => {
 })
 ```
 
-Or another form where we do not use a closure.
-
+或者另一种不使用闭包的形式。
 
 ```scala
 val policy = TimeoutPolicy(name = Some("mypolicy"), initial = 1 second)
@@ -67,13 +66,13 @@ Await.ready(future, tx.waitTime)
 tx.end
 ```
 
-The `tx.end` is important as it provides closure to a single operation watched by the timeout policy, something that is automatically detected when using the preferred closure version of the API. This is used as a feedback loop to observe actual execution times and feed this information back into the heuristics.
+`tx.end`很重要，因为它为超时策略监视的单个操作提供了闭包，当使用API的首选闭包版本时，会自动检测到该闭包。这是一个反馈循环，用于观察实际执行时间，并将此信息反馈给启发式(heuristics)。
 
 ## Java API
 
-In the Java API, we create the timeout policy using a policy builder, as can be seen in the following examples...
+在Java API中，我们使用策略生成器创建超时策略，如下面的示例所示...
 
-1. For fixed timeout.
+1. 对于固定超时。
 
    ```java
    TimeoutPolicy fixedTimeoutPolicy = TimeoutPolicyBuilder
@@ -83,7 +82,7 @@ In the Java API, we create the timeout policy using a policy builder, as can be 
        .build();
    ```
 
-2. Timeout based on standard deviation of response times (sigma).
+2. 基于响应时间标准差的超时。
  
    ```java
    TimeoutPolicy sigmaTimeoutPolicy = TimeoutPolicyBuilder
@@ -94,7 +93,7 @@ In the Java API, we create the timeout policy using a policy builder, as can be 
        .build();
    ```
 
-3. Timeout based on percentile of response times.
+3. 基于响应时间百分比的超时。
 
    ```java
    TimeoutPolicy percentileTimeoutPolicy = TimeoutPolicyBuilder
@@ -105,7 +104,7 @@ In the Java API, we create the timeout policy using a policy builder, as can be 
        .build();
    ```
 
-Then, to use the timeout policy, just execute your timed call inside the closure as follows:
+然后，要使用超时策略，只需执行您的定时调用内包如下:
 
 ```java
 policy.execute((Duration t) -> {
@@ -113,7 +112,7 @@ policy.execute((Duration t) -> {
 });
 ```
 
-Or, you can use the non-closure version of the call as follows:
+或者，你可以使用非闭包版本的调用如下:
 
 ```java
 TimeoutPolicy.TimeoutTransaction tx = policy.transaction();
@@ -126,36 +125,40 @@ try {
 }
 ```
 
-The `tx.end` is important as it provides closure to a single operation watched by the timeout policy, something that is automatically detected when using the preferred closure version of the API. This is used as a feedback loop to observe actual execution times and feed this information back into the heuristics.
+`tx.end`很重要，因为它为超时策略监视的单个操作提供了闭包，当使用API的首选闭包版本时，会自动检测到该闭包。这是一个反馈循环，用于观察实际执行时间，并将此信息反馈给启发式(heuristics)。
 
-## Heuristics in the TimeoutPolicy
-The default timeout policy is fixed timeout, which means you'll always get the initial value in regular mode and the debug value in debug mode. But the basic premise of having a timeout policy is providing heuristics-based timeouts. Following are the main concepts used in the timeout policy.
+## 超时策略中的启发式
 
-In statistics, the [**68–95–99.7  rule**](http://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule), also known as the **three-sigma rule** or **empirical rule**, states that nearly all values lie within three standard deviations of the mean in a normal distribution.
+默认的超时策略是固定超时，这意味着您总是在常规模式下获得初始值，在调试模式下获得调试值。但是，拥有超时策略的基本前提是提供基于启发式的超时。以下是超时策略中使用的主要概念。
+
+在统计学上，[**68–95–99.7  rule**](http://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule)，也称为**三标准差规则**或**经验法则**，指出几乎所有的数值都在均值的三个标准差内，呈正态分布。
 ![empirical rule](http://upload.wikimedia.org/wikipedia/commons/a/a9/Empirical_Rule.PNG)
-Therefore if you declare your timeout policy like below:
+
+因此，如果您像下面这样声明您的超时策略:
 
 ```scala
 val policy = TimeoutPolicy("mypolicy", initial = 1 second, rule = 2 sigma)
 ```
 
-You'll get a timeout value which will cover about 95% of the response times and cutting off the 5% anomalies by using a timeout policy of 2 sigma or 95 percentile. This is applied by calling `policy.execute(tiemout=>T)` or `policy.transaction.waitTime`.
+您将得到一个超时值，它将覆盖大约95%的响应时间，并通过使用2西格玛或95%的超时策略来切断5%的异常。这是通过调用`policy.execute(tiemout=>T)`或`policy.transaction.waitTime`来应用的。
 
-### Reset the statistic
-There are three ways to reset/start over the statistics
+### 重置统计
 
-1. Set the `startOverCount` on constructing the TimeoutPolicy, which will start over the statistic automatically when the total transaction count exceed the `startOverCount`
-2. Call `policy.reset` to reset the statistics, you can also give new `initial` and `startOverCount` on calling the reset method.
-3. Call `TimeoutPolicy.resetPolicy("yourName")` to reset the policy on global level.
+有三种方法可以重置/启动统计数据
 
-## The Name
+1. 在构造`TimeoutPolicy`时设置`startOverCount`，当总事务数超过`startOverCount`时，将自动开始统计
+2. 调用`policy.reset`来重置统计，你也可以在调用重置方法时给出新的`initial`和`startOverCount`。
+3. 调用`TimeoutPolicy.resetPolicy("yourName")`在全局级别重置策略。
 
-Any construction of a timeout policy takes an optional name. Timeout policies share their metrics with other policy instances using the same name. A policy-by-name would prevent users from having to create an instance of the policy and pass it out to all usages sharing the same policies. Users can then cleanly replicate the policy creation at any point of use while still collecting the metrics together. In addition, using a name in the policy allows for a centralized clearing of the metrics by calling `TimeoutPolicy.resetPolicy("name")`
+## 名称
 
-**Caution**: Do not use the same name for policies of totally different nature as that could mess up your stats. The results may not be predictable.
+超时策略的任何构造都采用可选名称。超时策略使用相同的名称与其他策略实例共享它们的指标。policy-by-name可以避免用户创建策略实例并将其传递给共享相同策略的所有用法。用户可以在任何使用点干净地复制策略创建，同时仍然收集指标。此外，在策略中使用名称可以通过调用`TimeoutPolicy.resetPolicy("name")`来集中清除指标。
 
-## Debugging
-For debugging purposes, the default timeout in a timeout policy is 1,000 seconds when you are executing in debug mode. You can set this by passing a `debug` parameter into the TimeoutPolicy as follows:
+**警告**: 不要对性质完全不同的策略使用相同的名称，因为这会打乱您的统计信息。结果可能无法预测。
+
+## 调试
+
+出于调试目的，在调试模式下执行超时策略时，超时策略中的默认超时时间为1,000秒。您可以通过向TimeoutPolicy传递一个`debug`参数来设置它，如下所示：
 
 ```scala
 val policy = TimeoutPolicy(name = Some("mypolicy"), initial = 1 second, debug = 10000 seconds)

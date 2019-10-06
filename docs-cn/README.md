@@ -29,11 +29,3 @@
     * [Deduplicate](deduplicate.md)
 * [Timeout Policy](timeoutpolicy.md)
 * [Validation](validation.md)
-
-## Release Notes
-
-Please find release notes at [https://github.com/paypal/squbs/releases](https://github.com/paypal/squbs/releases).
-
-## Support & Discussions
-
-Please join the discussion at  [![Join the chat at https://gitter.im/paypal/squbs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/paypal/squbs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)

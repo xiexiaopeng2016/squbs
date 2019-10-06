@@ -1,19 +1,19 @@
-# Persistent Buffer
+# 持久缓冲区
 
-`PersistentBuffer` is the first of a series of practical Akka Streams flow components. It works like the Akka Streams buffer with the difference that the content of the buffer is stored in a series of memory-mapped files in the directory given at construction of the `PersistentBuffer`. This allows the buffer size to be virtually limitless, not use the JVM heap for storage, and have extremely good performance in the range of a million messages/second at the same time.
+`PersistentBuffer`是一系列实用的Akka Streams流组件中的第一个。它的工作方式类似于Akka Streams缓冲区，不同之处在于，缓冲区的内容存储在一系列内存映射文件中，这些文件位于构建`PersistentBuffer`时给出的目录中。这允许缓冲区大小几乎是无限的，不使用JVM堆进行存储，并且同时具有每秒一百万条消息范围内的极佳性能。
 
-## Dependencies
+## 依赖
 
-The following dependencies are required for Persistent Buffer to work:
+要使持久缓冲区工作，需要以下依赖项：
 
 ```scala
 "org.squbs" %% "squbs-pattern" % squbsVersion,
 "net.openhft" % "chronicle-queue" % "4.16.5"
 ```
 
-## Examples
+## 示例
 
-The following example shows the use of `PersistentBuffer` in a stream:
+以下示例显示了在流中的使用`PersistentBuffer`：
 
 ```scala
 implicit val serializer = QueueSerializer[ByteString]()
@@ -24,7 +24,7 @@ val countFuture = source.via(buffer.async).runWith(counter)
 
 ```
 
-This version shows the same in a GraphDSL:
+此版本显示相同的功能，在一个GraphDSL中：
 
 ```scala
 implicit val serializer = QueueSerializer[ByteString]()
@@ -40,22 +40,25 @@ val streamGraph = RunnableGraph.fromGraph(GraphDSL.create(counter) { implicit bu
 val countFuture = streamGraph.run()
 ```
 
-## Back-Pressure
-`PersistentBuffer` does not back-pressure upstream. It will take all the stream elements given to it and grow its storage by increasing, or rotating, the number of queue files. It does not have any means to determine a limit on the buffer size or determine the storage capacity. Downstream back-pressure is honored as per Akka Streams and Reactive Streams requirements.
+## 背压
 
-If the `PersistentBuffer` stage gets fused with the downstream, `PersistentBuffer` would not buffer and it would actually back-pressure.  To make sure `PersistentBuffer` actually runs in its own pace, add an `async` boundary just after it. 
+`PersistentBuffer`不会对上游产生背压。它将获取所有给它的流元素，并通过增加或旋转来增加存储队列文件的数量。它没有任何手段来确定缓冲区大小的限制或确定存储容量。下游背压根据Akka流和反应流的要求来确定。
 
-## Failure & Recovery
+如果`PersistentBuffer`阶段与下游得到了融合，`PersistentBuffer`不会缓冲，它实际上会产生背压。为了确保`PersistentBuffer`实际以自己的速度运行，在它后面添加一个`async`边界。
 
-Due to it's persistent nature, `PersistentBuffer` can recover from abrupt stream shutdowns, failures, JVM failures or even potential system failures. A restart of a stream with the `PersistentBuffer` on the same directory will start emitting the elements stored in the buffer and not yet consumed before the newly added elements. Elements consumed from the buffer but not yet finished processing at the time of the previous stream failure or shutdown will cause a loss of only those elements.
+## 故障与恢复
 
-Since the buffer is backed by local storage, spindles or SSD, the performance and durability of this buffer is also dependent on the durability of this storage. A system malfunction or storage corruption may cause total loss of all elements in the buffer. So it is important to understand and assume the durability of this buffer not at the level of databases or other off-host persistent stores, in exchange for much higher performance.
+由于它的持久性，`PersistentBuffer`可以从突然的流关闭，故障，JVM故障甚至潜在的系统故障中恢复。使用同一目录下的`PersistentBuffer`重新启动流，将开始发送存储在缓冲区中的元素，这些元素在新添加的元素之前还没有被消费。在上一次流失败或关闭时，已从缓冲区中消费但尚未完成处理的元素将会丢失。
 
-Akka Streams stages batch the requests and buffers the records internally.  `PersistentBuffer` guarantees the recovery and persistence of the records that reached to `onPush`, the records that are in Akka Stream stage's internal buffer that has not reached to `onPush` yet would be lost during a failure.
+由于缓冲区依靠本地存储，spindle或SSD，性能和持久性也取决于这个存储的持久性。系统故障或存储损坏可能导致缓冲区中的所有元素全部丢失。因此，重要的是要了解并假定此缓冲区的持久性不在数据库或其他脱离主机的持久性存储级别，以换取更高的性能。
 
-## Commit Guarantee
+Akka Streams在内部分批处理请求并缓冲记录。 PersistentBuffer保证到达`onPush`的记录的恢复和持久性，在Akka Stream阶段的内部缓冲区中尚未到达`onPush`的记录将在故障期间丢失。
 
-In case of an unexpected failure, elements emitted from the `PersistentBuffer` stage but not yet reached to a `sink` would be lost. Sometimes, it might be required to avoid such data loss. Using a `commit` stage before a `sink` might help in such case.  To add a `commit` stage, use `PersistentBufferAtLeastOnce` instead.  Please see below example for `commit` stage usage:  
+## 提交保证
+
+如果发生意外故障，从`PersistentBuffer`阶段发出但尚未到达`sink`的元素将丢失。有时，可能需要避免这种数据丢失。在这种情况下，在`sink`之前使用一个`commit`阶段可能会有所帮助。要添加一个`commit`阶段，使用`PersistentBufferAtLeastOnce`代替。请参阅以下示例，了解`commit`阶段用法：
+
+ Please see below example for `commit` stage usage:  
 
 ```scala
 implicit val serializer = QueueSerializer[ByteString]()
@@ -80,15 +83,15 @@ val streamGraph = RunnableGraph.fromGraph(GraphDSL.create(counter) { implicit bu
 val countFuture = streamGraph.run()
 ```
 
-Please note, `commit` does not prevent the loss of messages in a `sink`'s (or any other stage's after `commit`) internal buffer.
+请注意，`commit`并不能防止`sink`内部缓冲区中的消息丢失(或`commit`之后的任何其他阶段)。
 
-### Commit Order
+### 提交顺序
 
-The `commit` stage should normally receive the elements in the index order.  However, a potential bug in a stream may cause an element to be dropped or reach to `commit` stage out of order.  The default `commit-order-policy` is set to `lenient` to let the stream continue in such scenarios.  You can set it to `strict` for a `CommitOrderException` to be thrown and let the `Supervision.Decider` determine what action to take.
+`commit`阶段通常应按索引顺序接收元素。然而，流中的一个潜在的bug可能会导致一个元素被删除或没有按顺序到达`commit`阶段。默认的`commit-order-policy`被设置为`lenient`，以便让流在这种情况下继续运行。您可以将它设置为`strict`，以抛出一个`CommitOrderException`，并让`Supervision.Decider`决定采取什么行动。
 
-## Space Management
+## 空间管理
 
-A typical directory for persisting the queue looks like the followings:
+用于持久化队列的典型目录如下：
 
 ```
 $ ls -l
@@ -96,10 +99,11 @@ $ ls -l
 -rw-r--r--  1 squbs_user     110054053      8192 May 17 20:00 tailer.idx
 ```
 
-Queue files are deleted automatically once all the readers have successfully processed reading the queue.
+一旦所有读者都成功处理读取队列的操作，队列文件将被自动删除。
 
-## Configuration
-The queue can be created by passing just a location of the persistent directory keeping all default configuration. This is seen in all the examples above. Alternatively, it can be created by passing a `Config` object at construction. The `Config` object is a standard [HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) configuration. The following example shows constructing a `PersistentBuffer` using a `Config`:
+## 配置
+
+可以通过仅传递保存所有缺省配置的持久目录的一个位置来创建队列。这在上面的所有例子中都可以看到。或者，也可以通过在构造时传递`Config`对象来创建它。`Config`对象是一个标准的[HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md)配置。下面的例子展示了如何使用`Config`来构造一个`PersistentBuffer`：
 
 ```scala
 val configText =
@@ -115,7 +119,7 @@ val config = ConfigFactory.parseString(configText)
 val buffer = new PersistentBuffer[ByteString](config)
 ```
 
-The following configuration properties are used for the `PersistentBuffer`
+以下配置属性用于`PersistentBuffer`
 
 ```sh
 persist-dir = /tmp/myQueue # Required
@@ -127,19 +131,19 @@ index-count = 16           # Optional, defaults to roll-cycle's count
 commit-order-policy = lenient # Optional, default to lenient
 ```
 
-Roll-cycle can be specified in lower or upper case. Supported values for `roll-cycle` are as follows:
+滚动周期可以用小写字母或大写字母指定。支持的`roll-cycle`值如下:
 
 Roll Cycle  | Capacity
 ------------|---------
-MINUTELY    | 64 million entries per minute
-HOURLY      | 256 million entries per hour
-SMALL_DAILY | 512 million entries per day
-DAILY       | 4 billion entries per day
-LARGE_DAILY | 32 billion entries per day
-XLARGE_DAILY| 2 trillion entries per day
-HUGE_DAILY  | 256 trillion entries per day
+MINUTELY    | 每分钟6400万个条目
+HOURLY      | 每小时2.56亿个条目
+SMALL_DAILY | 每天5.12亿个条目
+DAILY       | 每天40亿个条目
+LARGE_DAILY | 每天320亿个条目
+XLARGE_DAILY| 每天2万亿个条目
+HUGE_DAILY  | 每天256万亿个条目
 
-Wire-type can be specified in lower or upper case. Supported values for `wire-type` are as follows:
+可以使用大写或小写指定Wire-type。支持的值`wire-type`如下：
 
 * TEXT
 * BINARY
@@ -149,19 +153,21 @@ Wire-type can be specified in lower or upper case. Supported values for `wire-ty
 * RAW
 * CSV
 
-The memory sizes such as `block-size` and `index-spacing` are specified according to the [memory size format defined in the HOCON specification](https://github.com/typesafehub/config/blob/master/HOCON.md#size-in-bytes-format).
+内存大小诸如`block-size`和`index-spacing`是根据[在HOCON规范中定义的内存大小格式](https://github.com/typesafehub/config/blob/master/HOCON.md#size-in-bytes-format)指定的。
 
-## Serialization
-A `QueueSerializer[T]` needs to be implicitly provided for a `PersistentBuffer[T]`, as seen in the examples above:
+## 序列化
+
+需要为`PersistentBuffer[T]`隐式提供一个`QueueSerializer[T]`，如上面的例子所示：
 
 ```scala
 implicit val serializer = QueueSerializer[ByteString]()
 ```
 
-The `QueueSerializer[T]()` call produces a serializer for your target type. It depends on the serialization and deserialization of the underlying infrastructure.
+`QueueSerializer[T]()`调用为您的目标类型生成一个序列化器。它取决于底层基础设施的序列化和反序列化。
 
-### Implementing a Serializer
-To control the fine-grained persistent format in the queue, you may want to implement your own serializer as follows:
+### 实现一个序列化器
+
+为了在队列中控制细粒度的持久格式，您可能需要实现自己的序列化器，如下所示:
 
 ```scala
 case class Person(name: String, age: Int)
@@ -182,17 +188,18 @@ class PersonSerializer extends QueueSerializer[Person] {
 }
 ```
 
-To use this serializer, just declare it implicitly before constructing the `PersistentBuffer` as follows:
+要使用这个序列化器，只需在构造`PersistentBuffer`之前隐式地声明它，如下所示:
 
 ```scala
 implicit val serializer = new PersonSerializer()
 val buffer = new PersistentBuffer[Person](new File("/tmp/myqueue")
 ```
 
-## Broadcast Buffer
-`BroadcastBuffer` is a variant of persistent buffer. This works similar to `PersistentBuffer` except that stream elements are broadcasted to multiple output ports. Hence it is a combination of buffer and broadcast stages. The configuration takes an additional parameter named `output-ports` which specifies the number of output ports.
+## 广播缓冲区
 
-A broadcast buffer is specially required when stream elements are to be emitted from each output port at an independent rate depending on the speed of downstream demand.
+`BroadcastBuffer`是持久缓冲区的变体。除了流元素被广播到多个输出端口外，它的工作原理与`PersistentBuffer`类似。因此，它是缓冲区和广播阶段的组合。配置使用一个名为`output-ports`的附加参数，该参数指定输出端口的数量。
+
+当要根据下游需求的速度以独立的速率从每个输出端口发出流元素时，特别需要广播缓冲区。
 
 ```scala
 val configText =
@@ -209,7 +216,7 @@ val config = ConfigFactory.parseString(configText)
 val bcBuffer = new BroadcastBuffer[ByteString](config)
 ``` 
 
-## Examples
+## 示例
 
 ```scala
 implicit val serializer = QueueSerializer[ByteString]()
@@ -234,4 +241,4 @@ val countFuture = streamGraph.run()
 ```
 ## Credits
 
-`PersistentBuffer` utilizes [Chronicle-Queue](https://github.com/OpenHFT/Chronicle-Queue) 4.x as high-performance memory-mapped queue persistence.
+`PersistentBuffer`利用了[Chronicle-Queue](https://github.com/OpenHFT/Chronicle-Queue)4.x作为高性能内存映射队列持久性。

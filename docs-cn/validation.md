@@ -1,20 +1,19 @@
-# Validation
+# 验证
 
-squbs Validation provides a [Akka HTTP](http://doc.akka.io/) directive for data validation by using [Accord Validation Library](http://wix.github.io/accord/). Currently this is Scala only feature, Java version will be added in future versions of squbs.
+squbs验证通过使用[Accord验证库](http://wix.github.io/accord/)为数据验证提供了一个[Akka HTTP](http://doc.akka.io/)指令。目前这是Scala独有的特性，Java版本将会添加到将来的squbs中。
   
-## Dependencies
+## 依赖
 
-Add the following dependencies to your build.sbt or scala build file:
+将以下依赖项添加到您的`build.sbt`或scala构建文件:
 
 ```scala
 "org.squbs" %% "squbs-pattern" % squbsVersion,
 "com.wix" %% "accord-core" % "0.7.1"
 ```  
   
-## Usage
-  
-Given that an implicit `Person` validator is in the scope, `validate` directive can be used as other [Akka HTTP Directives](http://doc.akka.io/docs/akka-http/current/scala/http/routing-dsl/directives/index.html):
+## 用法
 
+考虑到隐式的`Person`验证器在作用域内，`validate`指令可以用作其他[Akka HTTP指令](http://doc.akka.io/docs/akka-http/current/scala/http/routing-dsl/directives/index.html)：
   
 ```scala
 import ValidationDirectives._
@@ -23,9 +22,9 @@ validate(person) {
 }
 ```  
 
-## Example
+## 示例
 
-Here is a sample `Person` class and corresponding validator (please see [Accord Validation Library](http://wix.github.io/accord/) for more validator usage examples).
+这里是一个示例`Person`类和相应的验证器(请参阅[Accord验证库](http://wix.github.io/accord/)以获得更多的验证器使用示例)。
 
 ```scala
 case class Person(firstName: String, lastName: String, middleName: Option[String] = None, age: Int)
@@ -42,7 +41,7 @@ object SampleValidators {
 }
 ```
 
-Now you can use the `validate` directive as follows: 
+现在你可以使用`validate`指令如下：
  
 ```scala
 def route =
@@ -61,9 +60,9 @@ def route =
    }
  }
 ```
+
+如果发生验证拒绝，则返回`400 Bad Request`，响应体中包含逗号分隔的导致验证拒绝的字段列表。使用上面的例子，如果请求体包含以下内容：
  
-If a validation rejection happens, a `400 Bad Request` is returned with the response body containing the comma separated list of field(s) causing validation rejection.  Using the above example, if the request body contains the following:
-  
 ```
 {
     "firstName" : "John",
@@ -71,9 +70,9 @@ If a validation rejection happens, a `400 Bad Request` is returned with the resp
     "age" : -1
 }
 ```
+
+然后，响应体将包含：
  
-then, the response body would contain:
-  
 ```
 Last Name, age 
 ```

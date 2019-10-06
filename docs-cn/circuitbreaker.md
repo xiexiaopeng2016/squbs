@@ -1,41 +1,43 @@
-# Circuit Breaker
+# 断路器
 
-### Overview
+### 概述
 
-Akka Streams and Akka HTTP are great technologies to build highly resilient systems. They provide back-pressure to ensure you do not overload the system and the slowness of one component does not cause its work queue to pile up and end up in memory leaks. But, we need another safeguard to ensure our service stays responsive in the event of external or internal failures, and have alternate paths to satisfying the requests/messages due to such failures. If a downstream service is not responding or slow, we could alternatively try another service or fetch cached results instead of back-pressuring the stream and potentially the whole system.
+Akka Streams和Akka HTTP是构建高度弹性系统的出色技术。它们提供了背压，以确保您不会使系统过载，并且一个组件的运行速度变慢不会导致其工作队列堆积并最终导致内存泄漏。但是，我们需要另一种保护措施，以确保我们的服务在出现外部或内部故障时保持响应，并具有替代路径来满足此类故障所引起的请求/消息。我们可以选择尝试另一个服务或获取缓存的结果，而不是对流和整个系统进行背压。
 
-squbs introduces `CircuitBreaker` Akka Streams `GraphStage` to provide circuit breaker functionality for streams.
+squbs引入了`CircuitBreaker` Akka Streams `GraphStage`，用于为流提供断路器功能。
 
-### Dependency
+### 依赖
 
-Add the following dependency to your `build.sbt` or scala build file:
+将以下依赖项添加到您的`build.sbt`或scala构建文件：
 
 ```
 "org.squbs" %% "squbs-ext" % squbsVersion
 ```
 
-### Usage
+### 用法
 
-The circuit breaker functionality is provided as a `BidiFlow` that can be connected to a flow via the `join` operator.  `CircuitBreaker` might potentially change the order of messages, so it requires a `Context` to be carried around.  In addition, it needs to be able to uniquely identify each element for its internal mechanics.  The requirement is that either the `Context` itself or a mapping from `Context` should be able to uniquely identify an element (see [Context to Unique Id Mapping](#context-to-unique-id-mapping) section for more details).  Along with the `Context`, a `Try` is pushed downstream: 
+断路器功能是由`BidiFlow`提供的，可以通过`join`操作符连接到流。`CircuitBreaker`可能会改变信息的顺序，因此需要携带`Context`。此外，它需要能够唯一地识别其每个元素的内部机制。需求是`Context`本身或来自`Context`的映射应该能够唯一地标识一个元素(查看[上下文用于惟一Id映射](#context-to-unique-id-mapping)章节了解更多细节)。
 
-Circuit is `Closed`:
+与`Context`一起，一个`Try`被推向下游：
 
-   * If an output `msg` is provided by the wrapped flow within the timeout, then `(Success(msg), context)` is passed down.
-   * Otherwise, a `(Failure(FlowTimeoutException()), context)` is pushed to downstream.
+线路(Circuit)是`Closed`:
 
-
-Circuit is `Open`:
-
-   * The result of `fallback` function, along with the `context`, is pushed to downstream if one provided
-   * Otherwise, a `(Failure(CircuitBreakerOpenException()), context)` is pushed to downstream 	
+   * 如果超时的包装流提供了输出`msg`，则`(Success(msg), context)`被传递到下游。
+   * 否则，一个`(Failure(FlowTimeoutException()), context)`被传递到下游。
 
 
-Circuit is `HalfOpen`:
+线路是`Open`:
+
+   * 如果提供了一个`fallback`函数的结果，将与`context`一起被传递到下游
+   * 否则，一个`(Failure(CircuitBreakerOpenException()), context)`被传递到下游
+
+
+线路是`HalfOpen`:
    
-   * The first request/element is let to go through the wrapped flow, and the behavior should be same as `Closed` state.
-   * Rest of the elements are short circuited and the behaviour is same to `Open` state. 	
+   * 让第一个请求/元素通过包装的流，并且行为应与`Closed`状态相同。
+   * 其余元素短路，其行为与`Open`状态相同。 	
 
-The state of the circuit breaker is hold in a `CircuitBreakerState` implementation.  The default implementation `AtomicCircuitBreakerState ` is based on `Atomic` variables, which allows it to be updated concurrently across multiple flow materializations.   
+断路器的状态保持在一个`CircuitBreakerState`实现中。`AtomicCircuitBreakerState`的默认实现是基于`Atomic`变量，这使得它可以跨多个流实现并发更新。
 
 ##### Scala
 
@@ -58,7 +60,7 @@ Source("a" :: "b" :: "c" :: Nil)
 
 ##### Java
 
-For Java, use `CircuitBreakerSettings` from the `org.squbs.streams.circuitbreaker.japi` package:
+对于Java，使用来自`org.squbs.streams.circuitbreaker.japi`包的`CircuitBreakerSettings`：
 
 ```java
 import org.squbs.streams.circuitbreaker.japi.CircuitBreakerSettings;
@@ -91,13 +93,13 @@ Source.from(Arrays.asList("a", "b", "c"))
         .runWith(Sink.seq(), mat);
 ```
 
-#### Fallback Response
+#### Fallback响应
 
-`CircuitBreakerSettings` optionally takes a fallback function that gets called when the circuit is `Open`.
+`CircuitBreakerSettings`可选地采用回退功能，该功能在线路(circuit)为`Open`时被调用。
 
 ##### Scala
 
-A function of type `In => Try[Out]` can be provided via `withFallback` function:
+可以通过`withFallback`函数提供一个`In => Try[Out]`类型的函数：
 
 ```scala
 import org.squbs.streams.circuitbreaker.CircuitBreakerSettings
@@ -109,7 +111,7 @@ val settings =
 
 ##### Java
 
-A `Function<In, Try<Out>>` can be provided via `withFallback` function:
+可以通过`withFallback`函数提供一个`Function<In, Try<Out>>`类型的函数：
 
 ```java
 import org.squbs.streams.circuitbreaker.japi.CircuitBreakerSettings;
@@ -119,13 +121,13 @@ CircuitBreakerSettings settings =
                 .withFallback(s -> Success.apply("Fallback Response!"));
 ```
 
-#### Failure Decider
+#### 失败决定者
 
-By default, any `Failure` from the joined `Flow` is considered a problem and causes the circuit breaker failure count to be incremented.  However, `CircuitBreakerSettings` also accepts an optional `failureDecider` to decide on whether an element passed by the joined `Flow` is actually considered a failure.  For instance, if Circuit Breaker is joined with an Akka HTTP flow, a `Success` Http Response with status code 500 internal server error should be considered a failure.
+默认情况下，连接的`Flow`中的任何`Failure`都被认为是一个问题，并导致断路器故障计数增加。但是，`CircuitBreakerSettings`也接受一个可选的`failureDecider`来决定通过连接的`Flow`传递的元素是否被认为是失败的。例如，如果断路器与Akka HTTP流连接，一个包含状态码为500的内部服务器错误的`Success`HTTP响应应视为失败。
 
 ##### Scala
 
-A function of type `Try[Out] => Boolean` can be provided via `withFailureDecider` function. Below is an example where, along with any `Failure` message, a `Success` of `HttpResponse` with status code `400` and above is also considered a failure:
+一个类型为`Try[Out] => Boolean`的函数可以通过`withFailureDecider`函数提供。下面是一个例子，与任何`Failure`消息一样，状态码`400`及以上的`Success``HttpResponse`也被视为失败：
 
 ```scala
 import org.squbs.streams.circuitbreaker.CircuitBreakerSettings
@@ -137,7 +139,7 @@ val settings =
 
 ##### Java
 
-A `Function<Try<Out>, Boolean>` can be provided via `withFailureDecider` function.  Below is an example where, along with any `Failure` message, a `Success` of `HttpResponse` with status code `400` and above is also considered a failure:
+一个类型为`Function<Try<Out>, Boolean>`的函数可以通过`withFailureDecider`函数提供。下面是一个例子，与任何`Failure`消息一样，状态码`400`及以上的`Success``HttpResponse`也被视为失败：
 
 ```java
 import org.squbs.streams.circuitbreaker.japi.CircuitBreakerSettings;
@@ -148,9 +150,9 @@ CircuitBreakerSettings settings =
                         tryHttpResponse -> tryHttpResponse.isFailure() || tryHttpResponse.get().status().isFailure());
 ```
 
-#### Creating CircuitBreakerState from a configuration
+#### 从配置创建CircuitBreakerState
 
-While `AtomicCircuitBreakerState` has programmatic API for configuration, it also allows the configuration to be provided through a `Config` object.  The `Config` can partially define some settings, and for the rest, it will fallback to default values.  Please see [here](../squbs-ext/src/main/resources/reference.conf) for the default circuit breaker configuration.
+虽然`AtomicCircuitBreakerState`有用于配置的可编程API，但它也允许通过`Config`对象提供配置。`Config`可以部分地定义一些设置，其余的将退回到默认值。请查看[这里](../squbs-ext/src/main/resources/reference.conf)了解默认断路器配置。
 
 ##### Scala
 
@@ -180,25 +182,25 @@ Config config = ConfigFactory.parseString(
 final CircuitBreakerState state = AtomicCircuitBreakerState.create("sample", config, system);
 ```
 
-#### Circuit Breaker across materializations
+#### 断路器跨具体化
 
-Please note, in many scenarios, the same circuit breaker instance is used across multiple materializations of the same flow.  For such scenarios, make sure to use a `CircuitBreakerState` instance that can be modified concurrently.  The default implementation `AtomicCircuitBreakerState` uses `Atomic` variables and can be used across multiple materializations.  More implementations can be introduced in the future.
+请注意，在许多情况下，同一断路器实例用于同一流的多个具体化。对于这类场景，请确保使用一个可以并发修改的`CircuitBreakerState`实例。`AtomicCircuitBreakerState`的默认实现使用`Atomic`变量，可以跨多个具体化使用。将来可以介绍更多的实现。
 
-#### Context to Unique Id Mapping
+#### 用于唯一ID映射的上下文
 
-`Context` itself might be used as a unique id.  However, in many scenarios, `Context` contains more than the unique id itself or the unique id might be retrieved as a mapping from the `Context`.  squbs allows different options to provide a unique id:
+`Context`本身可以用作唯一的id。但是，在许多场景中，`Context`包含的内容比惟一id本身更多，或者惟一id可能作为映射从`Context`检索。squbs允许使用不同的选项来提供唯一的ID：
 
-   * `Context` itself is a type that can be used as a unique id, e.g., `Int`, `Long`, `java.util.UUID`
-   * `Context` extends `UniqueId.Provider` and implements `def uniqueId`
-   * `Context` is wrapped with `UniqueId.Envelope`
-   * `Context` is mapped to a unique id by calling a function
+   * `Context` 它本身是一种可以用作唯一id的类型，例如，`Int`，`Long`，`java.util.UUID`
+   * `Context` 扩展`UniqueId.Provider`并实现`def uniqueId`
+   * `Context` 是用`UniqueId.Envelope`包装的
+   * `Context` 通过调用函数映射到唯一ID
 
 
-With the first three options, a unique id can be retrieved directly through the context.  For the last option, `CircuitBreakerSettings` allows a function to be provided.
+使用前三个选项，可以直接通过上下文检索唯一的id。对于最后一个选项，`CircuitBreakerSettings`允许提供一个函数。
 
 ##### Scala
 
-A function of type `Context => Any` can be provided via `withUniqueIdMapper` function:
+可以通过`withUniqueIdMapper`函数提供一个`Context => Any`类型的函数：
 
 ```scala
 import org.squbs.streams.circuitbreaker.CircuitBreakerSettings
@@ -212,7 +214,7 @@ val settings =
 
 ##### Java
 
-A `Function<Context, Any>` can be provided via `withUniqueIdMapper` function:
+可以通过`withUniqueIdMapper`函数提供一个`Function<Context, Any>`类型的函数：
 
 ```java
 import org.squbs.streams.circuitbreaker.japi.CircuitBreakerSettings;
@@ -236,13 +238,13 @@ CircuitBreakerSettings settings =
                 .withUniqueIdMapper(context -> context.id());
 ```
 
-#### Notifications
+#### 通知
 
-An `ActorRef` can be subscribed to receive all `TransitionEvents` or any transition event that it is interested in, e.g., `Closed`, `Open`, `HalfOpen`.
+可以订阅一个`ActorRef`来接收所有`TransitionEvents`或它感兴趣的任何转换事件，例如`Closed`，`Open`，`HalfOpen`。
 
 ##### Scala
 
-Here is an example that registers an `ActorRef` to receive events when circuit transitions to `Open` state:
+这是一个示例，注册一个`ActorRef`用于当线路切换到`Open`状态时接收事件：
 
 ```scala
 state.subscribe(self, Open)
@@ -250,26 +252,26 @@ state.subscribe(self, Open)
 
 ##### Java
 
-Here is an example that registers an `ActorRef` to receive events when circuit transitions to `Open` state:
+这是一个示例，注册一个`ActorRef`用于当线路切换到`Open`状态时接收事件：
 
 ```java
 state.subscribe(getRef(), Open.instance());
 ```
 
-#### Metrics
+#### 指标
 
-The `CircuitBreakerState` keeps Codahale meters for:
+`CircuitBreakerState`保持Codahale指标:
 
-* Success count
-* Failure count
-* Short circuit times
+* 成功次数
+* 失败次数
+* 短路次数
 
-It also keeps a `Gauge` for the circuit breaker state.
+它也为断路器状态保持一个`Gauge`。
 
-To differentiate metrics across instance, `CircuitBreakerState` implementation require a name to passed in.
+为了在实例之间区分指标，`CircuitBreakerState`实现需要传入一个名称。
 
-`CircuitBreakerState` also allows a `MetricRegistry` instance to be passed in.  If no `MetricRegistry` is passed in, it creates one internally. 
+`CircuitBreakerState`还允许传入一个`MetricRegistry`实例。如果没有传递`MetricRegistry`，它将在内部创建一个。
 
-#### Potential effects of Circuit Open state on throughput
+#### 线路Open状态对吞吐量的潜在影响
 
-If the upstream does not control the throughput, then the throughput of the stream might temporarily increase once the circuit is `Open`:  The downstream demand will be addressed with short circuit/fallback messages, which might (or might not) take less time than it takes the joined `Flow` to process an element.  To eliminate this problem, a throttle can be applied specifically for circuit breaker `Open` messages (or fallback messages).
+如果上游不控制吞吐量，一旦线路`Open`，流的吞吐量可能会暂时增加。下游需求将通过短路(short circuit)/回退(fallback)消息来处理，这可能(也可能不会)比它使用连接的`Flow`来处理一个元素所需的时间更少。为了消除这个问题，可以专门为断路器`Open`消息(或回退消息)应用一个节流阀(throttle)。

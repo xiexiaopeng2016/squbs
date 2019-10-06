@@ -1,52 +1,52 @@
-# Deduplicate Stage
+# 重复数据删除阶段
 
-### Overview
+### 概述
 
-`Deduplicate` is an Akka Streams `GraphStage` to drop identical (consecutive or non-consecutive) elements  in a stream.
+`Deduplicate`是一个Akka流`GraphStage`用于删除一个流中相同(连续或非连续)的元素。
 
-### Dependency
+### 依赖
 
-Add the following dependency to your `build.sbt` or scala build file:
+将以下依赖项添加到您的`build.sbt`或scala构建文件：
 
 ```
 "org.squbs" %% "squbs-ext" % squbsVersion
 ```
 
-### Usage
+### 用法
 
-The usage is very similar to standard Akka Stream stages:
+用法与标准Akka Stream阶段非常相似：
 
 ```scala
 val result = Source("a" :: "b" :: "b" :: "c" :: "a" :: "a" :: "a" :: "c" :: Nil).
   via(Deduplicate()).
-  runWith(Sink.seq)
+  runWith(Sink.seq)
   
 // Output: ("a" :: "b" :: "c" :: Nil)
 ```
 
-`Deduplicate` keeps a registry of already seen elements.  To prevent the registry growing unboundedly, it allows to specify the number of duplicates for each message.  Once `duplicateCount` is reached that element is removed from the registry.  In the following example, `duplicateCount` is specified as `2`, so, `"a"` will not be dropped when seen the third time: 
+`Deduplicate`保存一个已经见过的元素的注册表。为了防止注册表无限制地增长，它允许为每个消息指定重复的数目。一旦到达`duplicateCount`，该元素将从注册表中删除。在下面的例子中，`duplicateCount`被指定为`2`，因此，`"a"`在第三次出现时不会被删除：
 
 ```scala
 val result = Source("a" :: "b" :: "b" :: "c" :: "a" :: "a" :: "a" :: "c" :: Nil).
   via(Deduplicate(2)).
-  runWith(Sink.seq)
+  runWith(Sink.seq)
   
 // Output: ("a" :: "b" :: "c" :: "a" :: Nil)
 ```
 
-Please note, `duplicateCount` prevents registry from ever growing when the number of duplicates are known.  However, there is still the potential of memory leaks.  For instance, if `duplicateCount` is set to `2`, an element will be kept in the registry until the duplicate is seen; however, there might be scenarios where duplicate never shows up, e.g., a `filter` or `drop` is used.  So, be aware of consequences of `Duplicate` in your use case.
+请注意，`duplicateCount`可以防止注册表在重复的数量已知的情况下不断增长。但是，仍然存在内存泄漏的可能性。例如，如果`duplicateCount`被设置为`2`，那么一个元素将一直保存在注册表中，直到看到重复为止; 然而，在某些情况下，可能永远不会出现重复，例如，使用了`filter`或`drop`。因此，请注意在您的用例中`Duplicate`的后果。
 
-You can also provide a different registry implementation to `Deduplicate` that cleans itself periodically.  But, you should do this only if you are certain that a duplicate would not be seen after a given time frame; otherwise, the duplication logic might be corrupted.
+你也可以提供一个不同的注册表实现`Deduplicate`，定期清理自己。但是，只有在您确定在给定的时间范围内不会看到副本时，才应该这样做; 否则，副本逻辑可能被破坏。
 
-### Configuring registry key and registry implementation
+### 配置注册表项和注册表实现
 
-`Deduplicate` uses the element itself as the key to the registry by default.  However, it also accepts a function to map to a key from the element.  For instance, if the elements in the stream are tuples of type `(Int, String)` and you would like to identify duplicates only based on the first field of the tuple, you can pass a function as follows:
+`Deduplicate`默认使用元素本身作为注册表的键。但是，它也接受一个映射元素到键的函数。例如，如果流中的元素是`(Int, String)`类型的元组并且你想要识别重复的只是基于元组的第一个字段，你可以传递一个函数如下:
 
 ```scala
-val deduplicate = Deduplicate((element: (Int, String)) => element._1, 2)
+val deduplicate = Deduplicate((element: (Int, String)) => element._1, 2) // 2是默认值
 ```  
 
-`Deduplicate` also allows the registry to replaced with a different implementation of type `java.util.Map[Key, MutableLong]`.
+`Deduplicate`还允许将注册表替换为另一个类型`java.util.Map[Key, MutableLong]`的实现。
 
 ```scala
 val deduplicate = Deduplicate(2, new util.TreeMap[String, MutableLong]())
