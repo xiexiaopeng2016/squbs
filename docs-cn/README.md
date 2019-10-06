@@ -3,8 +3,8 @@
 ## 文档
 
 * [squbs设计原理](principles_of_the_squbs_design.md)
-* [Unicomplex & Cube 引导](bootstrap.md)
-* [Unicomplex Actor 层次](actor-hierarchy.md)
+* [Unicomplex & Cube 引导程序](bootstrap.md)
+* [Unicomplex Actor 层次结构](actor-hierarchy.md)
 * [运行时生命周期 & API](lifecycle.md)
 * [实现HTTP(S)服务](http-services.md)
 * [Akka HTTP 客户端 on Steroids](httpclient.md)

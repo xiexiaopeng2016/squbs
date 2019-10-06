@@ -2,13 +2,11 @@
 
 ## 介绍
 
-是一组组件，可在大规模，托管的云环境中实现Akka和Akka HTTP应用程序/服务的标准化和可操作性。它标准化了如何将Akka应用程序部署在不同的环境中以及如何将其连接到大型Internet规模组织的运营环境。
+squbs(发音"skewbs")是一套组件，支持在大型、托管的云环境中对Akka和Akka HTTP应用程序/服务进行标准化和操作化。它标准化了Akka应用程序如何部署在不同的环境中，以及它们如何连接到大型internet规模组织的操作环境。
 
-squbs (发音"skewbs") is a suite of components enabling standardization and operationalization of Akka and Akka HTTP applications/services in a large scale, managed, cloud environment. It standardizes how Akka applications are deployed in different environments and how they are hooked up to the operational environments of large, internet-scale organizations.
+## squbs组件
 
-## squbs Components
-
-1. **Unicomplex**: The micro-container that bootstraps and standardizes the deployment of Akka applications and how they are configured, allowing teams other than PD to understand the configuration and tweak the configuration of applications, partly at runtime, as needed. In addition, the Unicomplex encourages coexistence of different modules, called cubes, and/or operational tooling in a flexible, loosely-coupled fashion that will not incur any code change in order to include new ops tooling or drop out/change some ops tooling. For instance, in cases where we have mixed cloud environments such as private and public cloud needing different operational tools, the same codebase will work with both allowing deployment-time addition of environment-specific tooling.
+1. **Unicomplex**: 微型容器，引导并标准化Akka应用程序的部署以及它们的配置方式，允许PD以外的团队了解配置并根据需要调整应用程序的配置(部分在运行时)。此外，Unicomplex鼓励以一种灵活、松耦合的方式共存不同的模块，称为cube和/或操作工具，这种方式不会导致任何代码更改，从而包括新的操作工具或删除/更改某些操作工具。例如，在我们有混合云环境的情况下，例如私有云和公共云需要不同的操作工具，相同的代码库将同时工作，允许在部署时添加特定于环境的工具。
 
 2. **TestKit**: Used to help test applications written for squbs, or even Akka applications altogether. It provides unit test and small scale load testing facilities that can be run as part of CI.
 

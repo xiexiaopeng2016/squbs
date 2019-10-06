@@ -82,9 +82,9 @@ squbs将应用划分到称为cubes的模块中。squbs中的模块旨在模块�
 
 Well-known actor 只是[Akka文档](http://doc.akka.io/docs/akka/2.3.13/scala.html)所定义的[Akka actors](http://doc.akka.io/docs/akka/2.3.13/scala/actors.html)。它们由一个监管者actor启动，其为每一个cube创建。监管者有和cube相同的名称。因此，任何well-known actor有一个路径`/CubeName/ActorName`，并可以用`ActorSelection`调用在`/user/CubeName/ActorName`下面查找。
 
-一个well-known actor可以作为一个单独的actor或者一个with路由器启动。为了将一个well-known actor声明为一个路由器，增加：`with-router = true`到actor声明中。对well-known actor的路由器, 调度器和邮箱的配置在`reference.conf`或`application.conf`中完成，根据Akka文档。
+一个well-known actor可以作为一个单独的actor或者一个with路由器启动。为了将一个well-known actor声明为一个路由器，增加：`with-router = true` 到actor声明中。对well-known actor的路由器，调度器和邮箱的配置在`reference.conf`或`application.conf`中完成，根据Akka文档。
 
-下面是一个简单的cube声明`META-INF/squbs-meta.conf`，声明了一个well known actor：
+下面是一个简单的cube声明`META-INF/squbs-meta.conf`，声明了一个well-known actor：
 
 ```
 cube-name = org.squbs.bottlecube
@@ -101,7 +101,7 @@ squbs-actors = [
 
 `init-required`参数用于那些需要发回其完全初始化状态的actor, 以便将系统视为已初始化。有关startup/initialization hooks的完整讨论, 请参阅[运行时生命周期 & API](lifecycle.md)文档的[Startup Hooks](lifecycle.md#startup-hooks)部分。
 
-如果一个actor配置了`with-router`(with-router = true)和一个非默认调度器，其目的通常是将actor(routee)调度到非默认调度器上。路由器将占用well known actor的名称, 而不是routee(你的actor实现)的。路由器上设置的调度器只会影响路由器, 而不会影响routee。要影响routee, 您需要为routees创建一个单独的配置, 并将"/*"追加到该名称。接下来, 您要将routee中的调度器配置为下面的示例。
+如果一个actor配置了`with-router`(with-router = true)和一个非默认调度器，其目的通常是将actor(routee)调度到非默认调度器上。路由器将占用well-known actor的名称, 而不是routee(你的actor实现)的。路由器上设置的调度器只会影响路由器, 而不会影响routee。要影响routee, 您需要为routees创建一个单独的配置, 并将"/*"追加到该名称。接下来, 您要将routee中的调度器配置为下面的示例。
 
 ```
 akka.actor.deployment {
@@ -155,11 +155,9 @@ squbs-services = [
 
 ## 扩展
 
-squbs中的扩展是用于环境启动的低层设施。扩展的初始化器需要继承于`org.squbs.lifecycle.ExtensionLifecycle`特质，并覆盖合适的回调。扩展有很大的能力来内省系统，并提供额外的功能，而这些squbs本身并没有提供。在同一个cube中，不能将扩展与actor或服务组合在一起。
+squbs中的扩展是用于环境启动的低层设施。扩展的初始化器需要继承于`org.squbs.lifecycle.ExtensionLifecycle`特质，并覆盖合适的回调。扩展有很大的能力来内省系统，并提供额外的功能，而这些功能squbs本身并没有提供。在同一个cube中，不能将扩展与actor或服务组合在一起。
 
-扩展连续地启动, 一个接一个。扩展的提供者可以为扩展启动提供一个序号, 指定:
-    sequence = [number]
-在扩展定义中. 如果没有指定`sequence`，则默认为`Int.maxValue`。这意味着它将在所有提供了序号的扩展之后启动。如果有多个扩展不指定序号或指定了相同的序号, 则启动它们的顺序是随机的。关机顺序与启动顺序相反。
+扩展连续地启动，一个接一个。扩展的提供者可以为扩展启动提供一个序号，指定：`sequence = [number]` 在扩展定义中。如果没有指定`sequence`，则默认为`Int.maxValue`。这意味着它将在所有提供了序号的扩展之后启动。如果有多个扩展不指定序号或指定了相同的序号，则启动它们的顺序是随机的。关机顺序与启动顺序相反。
 
 # 关闭
 
