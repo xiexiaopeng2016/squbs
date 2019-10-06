@@ -35,7 +35,7 @@ UnicomplexBoot {(name, config) => ActorSystem(name, config)}
 
 3. ActorSystem创建者传递一个函数或闭包来创建ActorSystem。实际创建发生在启动阶段(下面第7项)。默认的函数是`{(name, config) => ActorSystem(name, config)}`。传入的`name`是从配置文件中读取的ActorSystem名称。这个`config`是与任何提供的配置合并后加载的配置对象。大多数用例都希望以这种方式创建ActorSystem, 因此不需要提供函数。`createUsing` 完全可以避免。
 
-`.scanResources("component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")`，将扫描你的类路径以及另外所给资源。如果你不想扫描类路径，传入`withClassPath = false`或者在资源列表前的第一个参数仅传入`false`：`.scanResources(withClassPath = false, "component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")`。
+`.scanResources("component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")`将扫描你的类路径以及另外所给资源。如果你不想扫描类路径，传入`withClassPath = false`或者在资源列表前的第一个参数仅传入`false`：`.scanResources(withClassPath = false, "component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")`。
 
 4. 使用`scanResources()`函数扫描组件查找cube、服务或者扩展。这是强制性的，否则将没有组件启动。如果没有传递参数, squbs引导程序将扫描其类加载器。测试用例可能希望只扫描某些组件。这通过可以传入另外的`squbs-meta.conf`文件位置(作为`scanResources`的一个变量参数)完成，比如`.scanResources("component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")`。将扫描你的类路径和另外所给的资源。如果你不想扫描类路径，传入`withClassPath = false`，或者`false`作为在资源列表前的第一个参数: `.scanResources(withClassPath = false, "component1/META-INF/squbs-meta.conf", "component2/META-INF/squbs-meta.conf")`。
 
@@ -78,9 +78,9 @@ squbs将应用划分到称为cubes的模块中。squbs中的模块旨在模块�
 
 当多个cube试图提供它们内部的`application.conf`时，为每个cube提供`application.conf`会导致问题。合并此类配置的优先级规则没有定义。推荐的做法是，cube仅提供一个`reference.conf`，并且可以被外部`application.conf`覆盖以进行部署。
 
-## Well Known Actors
+## Well-Known Actors
 
-Well known actor 只是[Akka文档]所定义的(http://doc.akka.io/docs/akka/2.3.13/scala.html)[Akka actors](http://doc.akka.io/docs/akka/2.3.13/scala/actors.html)。它们由一个监管者actor启动，其为每一个cube创建。监管者有和cube相同的名称。因此，任何well known actor有一个路径`/&lt;CubeName&gt;/&lt;ActorName&gt;`并可以用ActorSelection调用在`/user/&lt;CubeName&gt;/&lt;ActorName&gt;`下面查找。
+Well-known actor 只是[Akka文档](http://doc.akka.io/docs/akka/2.3.13/scala.html)所定义的[Akka actors](http://doc.akka.io/docs/akka/2.3.13/scala/actors.html)。它们由一个监管者actor启动，其为每一个cube创建。监管者有和cube相同的名称。因此，任何well known actor有一个路径`/&lt;CubeName&gt;/&lt;ActorName&gt;`并可以用`ActorSelection`调用在`/user/&lt;CubeName&gt;/&lt;ActorName&gt;`下面查找。
 
 `with-router = true`。对于well known actor路由器、调度器和邮件按照Akka文档配置在`reference.conf`或`application.conf`。
 
