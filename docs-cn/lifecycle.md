@@ -12,7 +12,7 @@ squbs运行时暴露了以下生命周期状态：
 
 * **Failed** - Cubes没有正确启动。
 
-* **Stopping** - 在Unicomplex收到GracefulStop消息。终止cube，actor并解绑服务。
+* **Stopping** - 在Unicomplex收到`GracefulStop`消息。终止cube，actor并解绑服务。
 
 * **Stopped** - squbs运行时停止。Unicomplex已终止。ActorSystem已终止。
 

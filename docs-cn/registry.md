@@ -52,35 +52,35 @@ squbs-actors = [
 
 ## Scala API & 示例
 
-* 发送消息(!/?/tell/ask)给请求消息类的类型注册为`TestRequest`的actor
+* 发送消息(!/?/tell/ask)给请求消息类型注册为`TestRequest`的actor
 
   ```scala
   implicit val refFactory : ActorRefFactory = ...
   ActorLookup ! TestRequest(...)
   ```
 
-* 发送消息(!/?/tell/ask)给请求消息类的类型注册为`TestRequest`，且响应消息类的类型为`TestResponse`的actor
+* 发送消息(!/?/tell/ask)给请求消息类型注册为`TestRequest`，且响应消息类型为`TestResponse`的actor
 
   ```scala
   implicit val refFactory : ActorRefFactory = ...
   ActorLookup[TestResponse] ! TestRequest(...)
   ```
 
-* 发送消息(!/?/tell/ask)给注册名为`TestActor`，且请求消息类的类型为`TestRequest`的actor
+* 发送消息(!/?/tell/ask)给注册名为`TestActor`，且请求消息类型为`TestRequest`的actor
 
   ```scala
   implicit val refFactory : ActorRefFactory = ...
   ActorLookup("TestActor") ! TestRequest(...)
   ```
 
-* 发送消息(!/?/tell/ask)给注册名为`TestActor`、请求消息类的类型为`TestRequest`，且响应消息类的类型为`TestResponse`的actor
+* 发送消息(!/?/tell/ask)给注册名为`TestActor`、请求消息类型为`TestRequest`，且响应消息类的类型为`TestResponse`的actor
 
   ```scala
   implicit val refFactory : ActorRefFactory = ...
   ActorLookup[TestResponse]("TestActor") ! TestRequest(...)  
   ```
 
-* 解决到actorRef，其响应消息类类型注册为`TestResponse`
+* 解决到actorRef，其响应消息类型注册为`TestResponse`
 
   ```scala
   implicit val refFactory : ActorRefFactory = ...
@@ -96,7 +96,7 @@ squbs-actors = [
   ActorLookup("TestActor").resolveOne
   ```
   
-* 解决到actorRef，其注册名为`TestActor`，响应消息类类型注册为`TestResponse`
+* 解决到actorRef，其注册名为`TestActor`，响应消息类型注册为`TestResponse`
 
   ```scala
   implicit val refFactory : ActorRefFactory = ...
@@ -104,7 +104,7 @@ squbs-actors = [
   ActorLookup[TestReponse]("TestActor").resolveOne
   ```
   
-* 解决到actorRef，其注册名为`TestActor`，请求消息类类型注册为`TestRequest`
+* 解决到actorRef，其注册名为`TestActor`，请求消息类型注册为`TestRequest`
  
   ```scala
   implicit val refFactory : ActorRefFactory = ...
