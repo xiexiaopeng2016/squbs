@@ -178,8 +178,6 @@ squbs-actors = [
 然而，返回类型从一个`ask`或`?`当查找ActorLookup时，它携带响应类型。
 然而`ask`或`?`在ActorLookup上，回类型是查找到的返回类型。如果使用响应类型 T 进行查找, 您将得到Future[T]如下所示。
 
-However the return type from an `ask` or `?` on ActorLookup carries the response type when looked up with it. So you'll get a `Future[T]` or `CompletionStage<T>` if you lookup with response type `T` as can be demonstrated in the examples below. No further MapTo is needed:
-
 ### Scala
 
 ```scala

@@ -21,13 +21,13 @@
 
 ```
 squbs.pipeline.server.default {
-	pre-flow = defaultServerPreFlow
-	post-flow = defaultServerPostFlow
+    pre-flow = defaultServerPreFlow
+    post-flow = defaultServerPostFlow
 }
 
 squbs.pipeline.client.default {
-	pre-flow = defaultClientPreFlow
-	post-flow = defaultClientPostFlow
+    pre-flow = defaultClientPreFlow
+    post-flow = defaultClientPostFlow
 }
 ```
 

@@ -8,7 +8,7 @@
 * [运行时生命周期 & API](lifecycle.md)
 * [实现HTTP(S)服务](http-services.md)
 * [Akka HTTP 客户端 on Steroids](httpclient.md)
-* [Request/Response 管道](pipeline.md)
+* [请求/响应管道](pipeline.md)
 * [编组和解组](marshalling.md)
 * [配置](configuration.md)
 * [测试squbs应用](testing.md)
