@@ -23,7 +23,7 @@
 * [资源解析](resolver.md)
 * Akka Streams `GraphStage`s:
     * [持久缓冲区](persistent-buffer.md)
-    * [永久流](streams-lifecycle.md)
+    * [永久流](perpetualstream.md)
     * [断路器](circuitbreaker.md)
     * [超时](flow-timeout.md)
     * [删除重复数据](deduplicate.md)
