@@ -59,7 +59,7 @@ The easiest way to getting started is to create a project from one of the squbs 
 * [Resource Resolution](resolver.md)
 * Akka Streams `GraphStage`s:
     * [Persistent Buffer](persistent-buffer.md)
-    * [Perpetual Stream](streams-lifecycle.md)
+    * [Perpetual Stream](perpetualstream.md)
     * [Circuit Breaker](circuitbreaker.md)
     * [Timeout](flow-timeout.md)
     * [Deduplicate](deduplicate.md)
