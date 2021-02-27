@@ -4,11 +4,6 @@
 
 `squbs-httpclient`项目在保持Akka HTTP API的同时，增加了[Akka HTTP主机级别客户端API](http://doc.akka.io/docs/akka-http/current/scala/http/client-side/host-level.html)操作方面的内容。下面是它添加的功能列表：
 
-管道：允许各客户端全局或者各自注册一个BidiAkka Stream流。
-指标：为每个客户端提供 Codahale 指标, 而无需 AspectJ。
-JMX Beans：将每一个客户端的配置暴露为JMX bean。
-断路器：基于断路器提供基于流的弹性。
-
 * [服务发现](#service-discovery-chain): 允许插入任何服务发现机制，并允许通过字符串标识符(例如`paymentserv`)解析HTTP端点。
 * [逐个客户端配置](#per-client-configuration): 让每个客户端单独覆盖`application.conf`中的默认值。
 * [管道](#pipeline): 允许一个`Bidi` Akka Stream流被注册为全局的或客户端单独的。 

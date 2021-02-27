@@ -1,6 +1,6 @@
 # Unicomplex & Cube 引导程序
 
-squbs自带一个默认的引导类`org.squbs.unicomplex.Bootstrap`。可以从IDE、命令行、sbt、甚至Maven启动。引导程序扫描类路径并在每个加载的jar资源中查找`META-INF/squbs-meta.&lt;ext&gt;`。如果squbs元数据可用, 则jar资源将被视为squbs cube或扩展, 并根据元数据声明进行初始化。然后, 引导程序首先初始化扩展、cube, 最后是服务处理程序, 不管它们在类路径中的顺序如何。
+squbs自带一个默认的引导类`org.squbs.unicomplex.Bootstrap`。可以从IDE、命令行、sbt、甚至Maven启动。引导程序扫描类路径并在每个加载的jar资源中查找`META-INF/squbs-meta.<ext>`。如果squbs元数据可用, 则jar资源将被视为squbs cube或扩展, 并根据元数据声明进行初始化。然后, 引导程序首先初始化扩展、cube, 最后是服务处理程序, 不管它们在类路径中的顺序如何。
 
 在正常情况下, 引导细节没有多少意义。然而，可能需要以不同的方式通过编程来引导squbs。这在需要定制配置和需要并行运行的测试用例中尤其常见。有关详细信息, 请参阅[测试](testing.md)。引导squbs的语法如下：
 
