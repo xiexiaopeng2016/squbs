@@ -80,7 +80,7 @@ class SampleFlowSvc extends FlowDefinition {
 
 ### 高级别 Java API
 
-The high-level server-side API is represented by Akka HTTP's `Route` artifact and its directives. To use a `Route` to handle requests, just provide a class extending the `org.squbs.unicomplex.RouteDefinition` trait and provide the `route` method as follows:
+高级服务器端API由Akka HTTP的路由构件及其指令表示。要使用路由来处理请求，只需提供一个类来扩展org.squbs.unicomplex。RouteDefinition特征，并提供如下的route方法:
 
 ```java
 import akka.http.javadsl.server.ExceptionHandler;
@@ -123,13 +123,13 @@ public class JavaRouteSvc extends AbstractRouteDefinition {
 }
 ```
 
-In addition to defining the `route`, you can also provide a [`RejectionHandler`](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/rejections.html#the-rejectionhandler) and an [`ExceptionHandler`](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/exception-handling.html#exception-handling) by overriding the `rejectionHandler` and `exceptionHandler` methods accordingly. These can be seen in the example above.
+除了定义`route`之外，您还可以通过相应覆盖[`RejectionHandler`](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/rejections.html#the-rejectionhandler)和[`ExceptionHandler`](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/exception-handling.html#exception-handling)方法来提供`rejectionHandler`和`exceptionHandler`。这些可以在上面的例子中看到。
 
-Please refer to the [Akka HTTP high-level API](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/index.html), [Routing DSL](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/overview.html), [Directives](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/directives/index.html), [Rejection](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/rejections.html), and [Exception Handling](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/exception-handling.html) documentation to fully utilize these APIs.
+请参考 [Akka HTTP high-level API](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/index.html), [Routing DSL](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/overview.html), [Directives](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/directives/index.html), [Rejection](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/rejections.html), 和 [Exception Handling](http://doc.akka.io/docs/akka-http/current/java/http/routing-dsl/exception-handling.html) 文档来充分利用这些API。
 
 ### 低级别 Java API
 
-To use the Java low-level API, just extend `org.squbs.unicomplex.AbstractFlowDefinition` and override the `flow` method. The `flow` needs to be of type `Flow[HttpRequest, HttpResponse, NotUsed]` using the Java DSL and model provided by Akka HTTP. Note the imports in the following:
+要使用Java的低级API，只需扩展 `org.squbs.unicomplex.AbstractFlowDefinition`即可。定义并覆盖`flow`方法。`flow`的类型需要是 `Flow[HttpRequest, HttpResponse, NotUsed]`，使用Java DSL和Akka HTTP提供的模型。注意下面的导入:
 
 ```java
 import akka.NotUsed;
