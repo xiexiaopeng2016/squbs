@@ -8,33 +8,32 @@ squbs(发音"skewbs")是一套组件，支持在大型、托管的云环境中�
 
 1. **Unicomplex**: 微型容器，引导并标准化Akka应用程序的部署以及它们的配置方式，允许PD以外的团队了解配置并根据需要调整应用程序的配置(部分在运行时)。此外，Unicomplex鼓励以一种灵活、松耦合的方式共存不同的模块，称为cube和/或操作工具，这种方式不会导致任何代码更改，从而包括新的操作工具或删除/更改某些操作工具。例如，在我们有混合云环境的情况下，例如私有云和公共云需要不同的操作工具，相同的代码库将同时工作，允许在部署时添加特定于环境的工具。
 
-2. **TestKit**: Used to help test applications written for squbs, or even Akka applications altogether. It provides unit test and small scale load testing facilities that can be run as part of CI.
+2. **TestKit**: 用于帮助测试为squbs编写的应用程序，甚至整个Akka应用程序。它提供了单元测试和小型负载测试设施，可以作为CI的一部分运行。
 
-3. **ZKCluster**: A ZooKeeper-based, datacenter-aware clustering library allowing clustered applications or services to span datacenter and hold the availability characteristics across data centers. This is needed for applications that need intra-cluster communications.
+3. **ZKCluster**: 一种基于zookeeper、支持数据中心的集群库，允许集群应用程序或服务跨数据中心，并保留跨数据中心的可用性特征。这对于需要集群内部通信的应用程序是必需的。
 
-4. **HttpClient**: An operationalized, simplified client that supports both environment and endpoint resolution to fit into different operational environments (QA, Prod) as well as organizational requirements (Topo, direct).
+4. **HttpClient**: 一个可操作的、简化的客户机，支持环境和端点解析，以适应不同的操作环境(QA、Prod)以及组织需求(Topo、direct)。
 
-5. **Pattern**: A set of programming patterns and DSLs provided to users.
-   1. Orchestration DSL allowing developers to describe their orchestration sequence in an extremely concise manner while running the whole orchestration asynchronously, thus largely simplifying code and reduces latency for the application.
-   2. Asynchronous systems depend heavily on timeouts and fixed timeouts are never right. TimeoutPolicy allows users to set policy (like 2.5 sigma) instead of fixed timeout values and takes care of the heuristics by itself allowing systems to adapt to their operating conditions.
-   3. Validation provides an [Akka HTTP directive](http://doc.akka.io/docs/akka-http/current/scala/http/routing-dsl/directives/index.html) for data validation by using [Accord Validation Library](http://wix.github.io/accord/).
-   4. PersistentBuffer provides a high-performance Akka Streams flow buffer component that persists its content to a memory-mapped file and recovers the content after failure and restart.
+5. **Pattern**: 提供给用户的一组编程模式和dsl。
+   1. 编排DSL允许开发人员以极其简洁的方式描述他们的编排顺序，同时异步运行整个编排，从而极大地简化了代码并减少了应用程序的延迟。
+   2. 异步系统在很大程度上依赖于超时，固定的超时从来都不是正确的。TimeoutPolicy允许用户设置策略(如2.5 sigma)，而不是固定的超时值，并自行处理启发式，允许系统适应其运行条件。
+   3. Validation提供了一个[Akka HTTP指令](http://doc.akka.io/docs/akka-http/current/scala/http/routing-dsl/directives/index.html)，通过使用[Accord Validation Library](http://wix.github.io/accord/)进行数据验证。
+   4. PersistentBuffer提供了一个高性能的Akka Streams流缓冲区组件，它将其内容持久化到内存映射文件中，并在失败和重启后恢复内容。
 
 6. **ActorRegistry**: A core lookup facility allowing actors of loosely-coupled modules to find each others, or even to model different services as actors.
 
-7. **ActorMonitor**: An add-on operational module that uses JMX to report the stats and behavior of actors in the system. These stats can be seen by any JMX tooling
+7. **ActorMonitor**: 一个使用JMX报告系统中参与者的统计和行为的附加操作模块。任何JMX工具都可以看到这些统计信息
 
-8. **Pipeline**: An infrastructure allowing sequencing and plugging in of request/response filters. These are used, for instance, for security, rate limiting, logging, etc.
-Each of the components have virtually no dependency on each others. They are truly loosely coupled. Developers and organizations are free to pick and choose the components needed for their environment.
+8. **Pipeline**: 允许对请求/响应过滤器进行排序和插入的基础设施。例如，它们用于安全性、速率限制、日志记录等。每个组件实际上彼此之间没有依赖关系。它们是真正松散耦合的。开发人员和组织可以自由选择环境所需的组件。
 
-9. **Console**: A drop-in module allowing web access to system and application stats through a simple web and service interface returning pretty-printed JSON.
+9. **Console**: 一个drop-in模块允许web访问系统和应用程序的统计信息，通过一个简单的web和服务接口返回精美的JSON。
 
 ## Getting Started
 
-The easiest way to getting started is to create a project from one of the squbs templates. The followings are currently available giter8 templates:
+最简单的入门方法是从一个squbs模板创建一个项目。下面是目前可用的giter8模板:
 
-* [squbs-scala-seed](https://github.com/paypal/squbs-scala-seed.g8): Template for creating sample squbs scala application
-* [squbs-java-seed](https://github.com/paypal/squbs-java-seed.g8): Template for creating sample squbs java application
+* [squbs-scala-seed](https://github.com/paypal/squbs-scala-seed.g8): 创建squbs scala应用示例的模板
+* [squbs-java-seed](https://github.com/paypal/squbs-java-seed.g8): 创建示例squbs java应用程序的模板
 
 ## Documentation
 
