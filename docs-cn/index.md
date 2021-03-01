@@ -20,7 +20,7 @@ squbs(发音"skewbs")是一套组件，支持在大型、托管的云环境中�
    3. Validation提供了一个[Akka HTTP指令](http://doc.akka.io/docs/akka-http/current/scala/http/routing-dsl/directives/index.html)，通过使用[Accord Validation Library](http://wix.github.io/accord/)进行数据验证。
    4. PersistentBuffer提供了一个高性能的Akka Streams流缓冲区组件，它将其内容持久化到内存映射文件中，并在失败和重启后恢复内容。
 
-6. **ActorRegistry**: A core lookup facility allowing actors of loosely-coupled modules to find each others, or even to model different services as actors.
+6. **ActorRegistry**: 核心查找功能允许松耦合模块的参与者彼此查找，甚至将不同的服务建模为参与者。
 
 7. **ActorMonitor**: 一个使用JMX报告系统中参与者的统计和行为的附加操作模块。任何JMX工具都可以看到这些统计信息
 
